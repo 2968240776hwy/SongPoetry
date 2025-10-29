@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宋词雅韵 - 古典文学智能服务平台</title>
+    <!-- 引入Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{#    <!-- 引入Font Awesome图标 -->python manage.py startapp home apps/home#}
+{#    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">#}
+    <style>
+        /* 基础样式 */
+        body {
+            background-color: #f5f1e6;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d2c8b0' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+            color: #3a3226;
+            font-family: "Noto Serif SC", "SimSun", serif;
+        }
+
+        /* 导航栏样式 */
+        .navbar-custom {
+            background-color: #8b7d6b;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-custom .navbar-brand {
+            color: #f5f1e6;
+            font-size: 1.8rem;
+            font-weight: bold;
+            letter-spacing: 0.1em;
+        }
+
+        .navbar-custom .nav-link {
+            color: #f5f1e6;
+            margin: 0 15px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .navbar-custom .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #d9c8a9;
+            transition: width 0.3s ease;
+        }
+
+        .navbar-custom .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .navbar-custom .nav-link:hover {
+            color: #d9c8a9;
+        }
+
+        /* 主内容区样式 */
+        .container {
+            margin-top: 30px;
+            padding-bottom: 60px;
+        }
+
+        /* 好词好句轮播区 */
+        .carousel-container {
+            background-color: rgba(255,255,255,0.7);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+        }
+
+        .carousel-title {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+            color: #5d4b36;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .carousel-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 2px;
+            background-color: #8b7d6b;
+        }
+
+        .poem-card {
+            background-color: rgba(255,255,255,0.6);
+            border-radius: 6px;
+            padding: 25px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .poem-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .poem-title {
+            font-size: 1.5rem;
+            color: #5d4b36;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .poem-content {
+            font-size: 1.1rem;
+            line-height: 2;
+            text-align: center;
+            white-space: pre-line;
+        }
+
+        .carousel-control-prev, .carousel-control-next {
+            width: 5%;
+        }
+
+        .carousel-control-prev-icon, .carousel-control-next-icon {
+            background-color: #8b7d6b;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 功能模块区 */
+        .modules-section {
+            margin-top: 50px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 1.8rem;
+            color: #5d4b36;
+            margin-bottom: 40px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 2px;
+            background-color: #8b7d6b;
+        }
+
+        .module-card {
+            background-color: rgba(255,255,255,0.7);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            height: 100%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .module-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            background-color: rgba(255,255,255,0.9);
+        }
+
+        .module-icon {
+            font-size: 3rem;
+            color: #8b7d6b;
+            margin-bottom: 20px;
+        }
+
+        .module-title {
+            font-size: 1.4rem;
+            color: #5d4b36;
+            margin-bottom: 15px;
+        }
+
+        .module-desc {
+            font-size: 1rem;
+            color: #6b5c47;
+            margin-bottom: 25px;
+            flex-grow: 1;
+        }
+
+        .module-btn {
+            background-color: #8b7d6b;
+            color: #f5f1e6;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            align-self: center;
+        }
+
+        .module-btn:hover {
+            background-color: #6b5c47;
+            color: #fff;
+        }
+
+        /* 词人展示区 */
+        .poets-section {
+            margin-top: 60px;
+        }
+
+        .poet-card {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .poet-img {
+            width: 120px;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin: 0 auto 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .poet-img:hover {
+            transform: scale(1.05);
+        }
+
+        .poet-name {
+            font-size: 1.1rem;
+            color: #5d4b36;
+            margin: 0;
+        }
+
+        /* 页脚样式 */
+        footer {
+            background-color: #8b7d6b;
+            color: #f5f1e6;
+            padding: 30px 0;
+            margin-top: 60px;
+        }
+
+        .footer-content {
+            text-align: center;
+        }
+
+        .footer-links {
+            margin: 15px 0;
+        }
+
+        .footer-links a {
+            color: #d9c8a9;
+            margin: 0 10px;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #fff;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .navbar-custom .nav-link {
+                margin: 10px 0;
+            }
+
+            .poem-card {
+                min-height: 250px;
+                padding: 15px;
+            }
+
+            .module-card {
+                margin-bottom: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fa fa-book mr-2"></i>宋词雅韵
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon text-white"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">
+                            <i class="fa fa-home mr-1"></i>首页
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'search' %}">
+                            <i class="fa fa-search mr-1"></i>宋词知识检索
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'visualization' %}">
+                            <i class="fa fa-bar-chart mr-1"></i>知识可视化
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'sushi_qa' %}">
+                            <i class="fa fa-comments mr-1"></i>智能问答
+                        </a>
+                    </li>
+                    <li class="nav-item">
+{#                        <a class="nav-link" href="{% url 'about' %}">#}
+{#                            <i class="fa fa-info-circle mr-1"></i>关于系统#}
+{#                        </a>#}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="container">
+        <!-- 好词好句轮播 -->
+        <div class="carousel-container">
+            <h2 class="carousel-title">好词好句</h2>
+            <div id="poemCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    <!-- 轮播项1 -->
+                    <div class="carousel-item active">
+                        <div class="poem-card">
+                            <h3 class="poem-title">《八六子·倚危亭》</h3>
+                            <p class="poem-content">倚危亭。恨如芳草，萋萋刬尽还生。
+念柳外青骢别后，水边红袂分时，怆然暗惊。
+无端天与娉婷。夜月一帘幽梦，春风十里柔情。
+怎奈向、欢娱渐随流水，
+素弦声断，翠绡香减，
+那堪片片飞花弄晚，蒙蒙残雨笼晴。
+正销凝。黄鹂又啼数声。</p>
+                        </div>
+                    </div>
+                    <!-- 轮播项2 -->
+                    <div class="carousel-item">
+                        <div class="poem-card">
+                            <h3 class="poem-title">《水调歌头·明月几时有》</h3>
+                            <p class="poem-content">明月几时有？把酒问青天。
+不知天上宫阙，今夕是何年。
+我欲乘风归去，又恐琼楼玉宇，高处不胜寒。
+起舞弄清影，何似在人间？
+
+转朱阁，低绮户，照无眠。
+不应有恨，何事长向别时圆？
+人有悲欢离合，月有阴晴圆缺，此事古难全。
+但愿人长久，千里共婵娟。</p>
+                        </div>
+                    </div>
+                    <!-- 轮播项3 -->
+                    <div class="carousel-item">
+                        <div class="poem-card">
+                            <h3 class="poem-title">《雨霖铃·寒蝉凄切》</h3>
+                            <p class="poem-content">寒蝉凄切，对长亭晚，骤雨初歇。
+都门帐饮无绪，留恋处，兰舟催发。
+执手相看泪眼，竟无语凝噎。
+念去去，千里烟波，暮霭沉沉楚天阔。
+
+多情自古伤离别，更那堪，冷落清秋节！
+今宵酒醒何处？杨柳岸，晓风残月。
+此去经年，应是良辰好景虚设。
+便纵有千种风情，更与何人说？</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- 轮播控制按钮 -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#poemCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">上一首</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#poemCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">下一首</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 功能模块区 -->
+        <div class="modules-section">
+            <h2 class="section-title">功能模块</h2>
+            <div class="row">
+                <!-- 宋词知识检索模块 -->
+                <div class="col-md-4 mb-4">
+                    <div class="module-card">
+                        <div class="module-icon">
+                            <i class="fa fa-search"></i>
+                        </div>
+                        <h3 class="module-title">宋词知识检索</h3>
+                        <p class="module-desc">提供多维度检索功能，支持按词人、词牌、名句、主题等方式查询，精准定位您需要的宋词作品及相关解析。</p>
+                        <a href="{% url 'search' %}" class="module-btn">
+                            进入检索 <i class="fa fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <!-- 知识可视化模块 -->
+                <div class="col-md-4 mb-4">
+                    <div class="module-card">
+                        <div class="module-icon">
+                            <i class="fa fa-bar-chart"></i>
+                        </div>
+                        <h3 class="module-title">知识可视化</h3>
+                        <p class="module-desc">通过词频分析、情感趋势、流派分布等可视化图表，直观展示宋词的艺术特色与时代特征，深入理解宋词文化。</p>
+                        <a href="{% url 'visualization' %}" class="module-btn">
+                            查看分析 <i class="fa fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <!-- 智能问答模块 -->
+                <div class="col-md-4 mb-4">
+                    <div class="module-card">
+                        <div class="module-icon">
+                            <i class="fa fa-comments"></i>
+                        </div>
+                        <h3 class="module-title">智能问答</h3>
+                        <p class="module-desc">针对苏轼词作的智能问答系统，解答关于苏轼生平、词作背景、艺术特色等问题，深度挖掘东坡词的文化内涵。</p>
+                        <a href="{% url 'sushi_qa' %}" class="module-btn">
+                            开始问答 <i class="fa fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 词人展示区 -->
+        <div class="poets-section">
+            <h2 class="section-title">词流芳</h2>
+            <div class="row">
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 poet-card">
+                    <img src="https://picsum.photos/id/1005/200/300" alt="苏轼" class="poet-img">
+                    <h4 class="poet-name">苏轼</h4>
+                </div>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 poet-card">
+                    <img src="https://picsum.photos/id/1012/200/300" alt="辛弃疾" class="poet-img">
+                    <h4 class="poet-name">辛弃疾</h4>
+                </div>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 poet-card">
+                    <img src="https://picsum.photos/id/1025/200/300" alt="李清照" class="poet-img">
+                    <h4 class="poet-name">李清照</h4>
+                </div>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 poet-card">
+                    <img src="https://picsum.photos/id/1074/200/300" alt="柳永" class="poet-img">
+                    <h4 class="poet-name">柳永</h4>
+                </div>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 poet-card">
+                    <img src="https://picsum.photos/id/177/200/300" alt="李煜" class="poet-img">
+                    <h4 class="poet-name">李煜</h4>
+                </div>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 poet-card">
+                    <img src="https://picsum.photos/id/338/200/300" alt="欧阳修" class="poet-img">
+                    <h4 class="poet-name">欧阳修</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <h3>宋词雅韵 - 古典文学智能服务平台</h3>
+                <div class="footer-links">
+{#                    <a href="{% url 'about' %}">关于我们</a>#}
+{#                    <a href="{% url 'contact' %}">联系我们</a>#}
+{#                    <a href="{% url 'terms' %}">使用条款</a>#}
+                </div>
+                <p>&copy; 2025 宋词雅韵系统 版权所有</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 引入Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 初始化轮播
+        document.addEventListener('DOMContentLoaded', function() {
+            const poemCarousel = new bootstrap.Carousel(document.getElementById('poemCarousel'), {
+                interval: 5000, // 5秒自动切换
+                wrap: true
+            });
+        });
+    </script>
+</body>
+</html>
