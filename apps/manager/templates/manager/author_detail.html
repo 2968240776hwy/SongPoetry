@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}{{ author.name }} - 词人详情{% endblock %}
+{% block content %}
+<div class="container mt-5" style="max-width: 800px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">{{ author.name }}</h3>
+        <a href="{% url 'manager:author_list' %}" class="btn btn-outline-secondary">
+            <i class="fa fa-arrow-left"></i> 返回列表
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <p><strong>编号：</strong>{{ author.value }}</p>
+            <p><strong>姓名：</strong>{{ author.name }}</p>
+            <hr>
+            <h5>简介（短）</h5>
+            <p>{{ author.short_desc|linebreaks }}</p>
+            <hr>
+            <h5>介绍（长）</h5>
+            <p>{{ author.long_desc|linebreaks }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

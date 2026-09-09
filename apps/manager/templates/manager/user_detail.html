@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}用户详情 - 宋词雅韵{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="mb-4">用户详情</h3>
+    <a href="{% url 'manager:user_list' %}" class="btn btn-secondary mb-3">返回用户列表</a>
+
+    <table class="table table-bordered">
+        <tr>
+            <th>用户名</th>
+            <td>{{ user.username }}</td>
+        </tr>
+        <tr>
+            <th>邮箱</th>
+            <td>{{ user.email }}</td>
+        </tr>
+        <tr>
+            <th>用户类型</th>
+            <td>{{ user.get_user_type_display }}</td>
+        </tr>
+        <tr>
+            <th>状态</th>
+            <td>{% if user.is_active %}激活{% else %}禁用{% endif %}</td>
+        </tr>
+        <tr>
+            <th>创建时间</th>
+            <td>{{ user.created_at|date:"Y-m-d H:i" }}</td>
+        </tr>
+        {% if userinfo %}
+        <tr>
+            <th>昵称</th>
+            <td>{{ userinfo.nickname }}</td>
+        </tr>
+        <tr>
+            <th>手机号</th>
+            <td>{{ userinfo.phone }}</td>
+        </tr>
+        <tr>
+            <th>头像</th>
+            <td>
+                {% if userinfo.avatar %}
+                    <img src="{{ userinfo.avatar.url }}" alt="头像" width="80">
+                {% else %}
+                    无
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <th>个人简介</th>
+            <td>{{ userinfo.bio }}</td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+{% endblock %}

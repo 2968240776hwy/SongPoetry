@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}词作管理 - 宋词雅韵{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">词作管理</h3>
+        <form method="get" class="d-flex mb-3">
+            <input type="text" name="q" class="form-control me-2" placeholder="搜索作者或内容" value="{{ query }}">
+            <input type="text" name="rhythmic" class="form-control me-2" placeholder="按词牌名筛选" value="{{ rhythmic }}">
+            <button type="submit" class="btn btn-primary">搜索</button>
+        </form>
+
+        <div>
+            <a href="{% url 'manager:manager_home' %}" class="btn btn-outline-secondary me-2">
+                <i class="fa fa-arrow-left"></i> 返回
+            </a>
+            <a href="{% url 'manager:poem_create' %}" class="btn btn-primary">
+                <i class="fa fa-plus"></i> 添加词作
+            </a>
+        </div>
+    </div>
+
+    <table class="table table-striped table-hover align-middle shadow-sm rounded">
+        <thead class="table-light text-center">
+            <tr>
+                <th>ID</th>
+                <th>词牌名</th>
+                <th>作者</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in poems %}
+            <tr class="text-center">
+                <td>{{ p.value }}</td>
+                <td><a href="{% url 'manager:poem_detail' p.value %}" class="text-decoration-none">{{ p.rhythmic }}</a></td>
+                <td>{{ p.author }}</td>
+                <td>
+                    <a href="{% url 'manager:poem_edit' p.value %}" class="btn btn-sm btn-warning me-1">编辑</a>
+                    <a href="{% url 'manager:poem_delete' p.value %}" class="btn btn-sm btn-danger"
+                       onclick="return confirm('确认删除该词作吗？');">删除</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-4">暂无词作</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if poems.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ poems.previous_page_number }}&q={{ q }}&user_type={{ user_type }}">上一页</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">上一页</span></li>
+            {% endif %}
+
+            {% for num in poems.paginator.page_range %}
+                {% if poems.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num >= poems.number|add:'-3' and num <= poems.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}&q={{ q }}&user_type={{ user_type }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if poems.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ poems.next_page_number }}&q={{ q }}&user_type={{ user_type }}">下一页</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">下一页</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+</div>
+{% endblock %}

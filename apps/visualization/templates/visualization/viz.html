@@ -1,0 +1,1075 @@
+{% extends 'base.html' %} <!-- 继承公共导航公共导航栏 -->
+
+{% block title %}宋词雅韵 - 古典文学智能服务平台{% endblock %}
+
+{% block extra_js_visualization %}
+    <!-- 数据可视化相关外部资源 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // 限制Tailwind样式作用域，避免全局污染
+        tailwind.config = {
+            important: '.tailwind-scope',
+            corePlugins: {
+                preflight: false, // 禁用基础样式重置，防止与全局样式冲突
+            }
+        }
+    </script>
+    <!-- 图表库 - 先加载基础Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- 力导向图库 - 提前加载确保d3可用 -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- 词云库 - 最后加载，依赖Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-wordcloud@4.1.0/build/index.umd.min.js"></script>
+{% endblock %}
+
+{% block extra_css %}
+    <style type="text/tailwindcss">
+        .content-auto {
+            content-visibility: auto;
+        }
+        .bg-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%238b5a2b' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        .card-shadow {
+            box-shadow: 0 4px 15px rgba(139, 90, 43, 0.1);
+        }
+        .chart-container {
+            transition: all 0.3s ease;
+        }
+        .chart-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(139, 90, 43, 0.15);
+        }
+        .word-cloud-placeholder {
+            background: linear-gradient(145deg, #f0e8d9, #e6ded0);
+            border-radius: 4px;
+        }
+        .author-chart-container {
+            height: 350px !important;
+        }
+        .chart-error {
+            color: #dc2626;
+            text-align: center;
+            padding: 2rem;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 字体优化 */
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #5d4b36;
+            font-family: "Noto Serif SC", "SimSun", serif;
+        }
+
+        .chart-subtitle {
+            font-size: 0.875rem;
+            color: #9b8c75;
+            font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
+        }
+
+        .main-title {
+            font-size: clamp(1.75rem, 4vw, 2.75rem);
+            font-weight: 700;
+            color: #5d4b36;
+            font-family: "Noto Serif SC", "SimSun", serif;
+            letter-spacing: -0.025em;
+        }
+
+        .main-subtitle {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            color: #7a6a53;
+            font-family: "Noto Serif SC", "SimSun", serif;
+            line-height: 1.6;
+        }
+
+        .grid-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .grid-chart-container {
+            flex: 1;
+            min-height: 300px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- 主要内容区 -->
+    <div class="tailwind-scope bg-pattern min-h-screen">
+        <main class="container mx-auto px-4 py-6">
+            <!-- 页面标题 -->
+            <div class="text-center mb-10">
+                <h2 class="main-title mb-4">宋词数据分析</h2>
+                <p class="main-subtitle max-w-4xl mx-auto">通过数据可视化探索宋词的艺术世界，揭示词人们的创作特点与情感表达</p>
+            </div>
+
+            <!-- 顶部：词人与作品图谱（全宽） -->
+            <div class="mb-8">
+                <div class="bg-white rounded-xl p-6 card-shadow chart-container">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <div>
+                            <h3 class="chart-title flex items-center mb-1">
+                                <i class="fa fa-sitemap mr-3 text-xl"></i>词人与作品图谱
+                            </h3>
+                            <p class="chart-subtitle">探索宋代词人及其代表作品的关系网络</p>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                            <!-- 搜索框 -->
+                            <div class="relative flex-grow md:flex-grow-0">
+                                <input type="text" id="authorSearch" placeholder="搜索词人..."
+                                    class="pl-10 pr-4 py-2.5 border border-secondary rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/50 w-full md:w-56 text-base font-sans">
+                                <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+                            </div>
+
+                            <!-- 筛选按钮 -->
+                            <div class="flex border border-secondary rounded-lg overflow-hidden font-sans text-base">
+                                <button id="showAllBtn" class="px-4 py-2.5 bg-primary text-white hover:bg-primary/90 transition-colors font-medium">全部</button>
+                                <button id="showAuthorsBtn" class="px-4 py-2.5 hover:bg-gray-100 transition-colors">仅词人</button>
+                                <button id="showWorksBtn" class="px-4 py-2.5 hover:bg-gray-100 transition-colors">仅作品</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图谱容器 -->
+                    <div class="h-[500px] border border-gray-200 rounded-lg overflow-hidden relative">
+                        <div id="graphContainer" class="w-full h-full"></div>
+                        <!-- 加载提示 -->
+                        <div id="graphLoader" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                            <div class="text-center">
+                                <i class="fa fa-circle-o-notch fa-spin text-3xl text-primary mb-3"></i>
+                                <p class="text-gray-600 font-sans">加载图谱中...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图例 -->
+                    <div class="flex justify-center mt-4 text-base font-sans" id="graphLegend">
+                        <div class="flex items-center mr-6" id="authorLegendItem">
+                            <span class="inline-block w-4 h-4 rounded-full bg-accent mr-2"></span>
+                            <span>词人</span>
+                        </div>
+                        <div class="flex items-center" id="workLegendItem">
+                            <span class="inline-block w-3 h-3 rounded-full bg-secondary mr-2"></span>
+                            <span>作品</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部：四宫格布局 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 词牌热度榜 - 饼图 -->
+                <div class="bg-white rounded-xl p-6 card-shadow chart-container grid-card">
+                    <div class="flex justify-between items-center mb-5">
+                        <div>
+                            <h3 class="chart-title flex items-center mb-1">
+                                <i class="fa fa-pie-chart mr-3"></i>词牌热度榜
+                            </h3>
+                            <p class="chart-subtitle">最受欢迎的宋词词牌分布</p>
+                        </div>
+                        <span class="chart-subtitle">Top 8</span>
+                    </div>
+                    <div class="grid-chart-container">
+                        <canvas id="rhythmicPieChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 词作情感分析 - 环形图 -->
+                <div class="bg-white rounded-xl p-6 card-shadow chart-container grid-card">
+                    <div class="flex justify-between items-center mb-5">
+                        <div>
+                            <h3 class="chart-title flex items-center mb-1">
+                                <i class="fa fa-tachometer mr-3"></i>词作情感分析
+                            </h3>
+                            <p class="chart-subtitle">宋代词作情感倾向分布</p>
+                        </div>
+                        <span class="chart-subtitle">喜·悲·忧·怒</span>
+                    </div>
+                    <div class="grid-chart-container">
+                        <canvas id="emotionDoughnutChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 作者产量榜 - 条形图 -->
+                <div class="bg-white rounded-xl p-6 card-shadow chart-container grid-card">
+                    <div class="flex justify-between items-center mb-5">
+                        <div>
+                            <h3 class="chart-title flex items-center mb-1">
+                                <i class="fa fa-bar-chart mr-3"></i>作者产量榜
+                            </h3>
+                            <p class="chart-subtitle">宋代词人作品数量排行</p>
+                        </div>
+                        <span class="chart-subtitle">Top 8</span>
+                    </div>
+                    <div class="grid-chart-container">
+                        <canvas id="authorBarChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 词作意象云 -->
+                <div class="bg-white rounded-xl p-6 card-shadow chart-container grid-card">
+                    <div class="flex justify-between items-center mb-5">
+                        <div>
+                            <h3 class="chart-title flex items-center mb-1">
+                                <i class="fa fa-cloud mr-3"></i>词作意象云
+                            </h3>
+                            <p class="chart-subtitle">宋词高频意象词汇分布</p>
+                        </div>
+                        <span class="chart-subtitle">高频名词</span>
+                    </div>
+                    <div class="grid-chart-container relative">
+                        <!-- 占位符 -->
+                        <div id="wordCloudPlaceholder" class="word-cloud-placeholder absolute inset-0 flex items-center justify-center rounded-lg">
+                            <i class="fa fa-cloud text-5xl text-primary/30"></i>
+                        </div>
+                        <!-- 词云容器 -->
+                        <canvas id="wordCloudCanvas" class="absolute inset-0 w-full h-full rounded-lg"></canvas>
+                        <!-- 加载提示 -->
+                        <div id="wordCloudLoader" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10 rounded-lg">
+                            <div class="text-center">
+                                <i class="fa fa-circle-o-notch fa-spin text-3xl text-primary mb-3"></i>
+                                <p class="text-gray-600 font-sans">加载词云图中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // 接口路径常量定义（集中管理，便于维护）
+        const API_PATHS = {
+            authorProductivity: '/visualization/api/author_productivity/',
+            rhythmicPopularity: '/visualization/api/rhythmic_popularity/',
+            emotionAnalysis: '/visualization/api/emotion_analysis/',
+            wordCloud: '/visualization/api/word_cloud/',
+            authorWorkGraph: '/visualization/api/author_work_graph/'
+        };
+
+        // 图表颜色配置（统一管理）
+        const CHART_COLORS = {
+            primary: {
+                main: 'rgba(139, 90, 43, 1)',
+                light: 'rgba(139, 90, 43, 0.4)',
+                medium: 'rgba(139, 90, 43, 0.7)'
+            },
+            secondary: {
+                main: 'rgba(74, 103, 65, 1)',
+                light: 'rgba(74, 103, 65, 0.4)',
+                medium: 'rgba(74, 103, 65, 0.7)'
+            },
+            accent: {
+                red: 'rgba(178, 34, 34, 0.7)',
+                brown: 'rgba(160, 82, 45, 0.7)'
+            }
+        };
+
+        // 等待DOM加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查关键依赖是否加载
+            checkDependencies();
+
+            // 初始化图表（确保在依赖加载后执行）
+            if (window.Chart) {
+                initAuthorBarChart();
+                initRhythmicPieChart();
+                initEmotionDoughnutChart();
+            } else {
+                console.error('Chart.js 未加载，将在3秒后重试');
+                setTimeout(initChartComponents, 3000);
+            }
+
+            // 延迟加载重量级组件（确保d3已加载）
+            if (window.d3) {
+                setTimeout(initGraph, 1000);
+            } else {
+                console.error('D3.js 未加载，将在3秒后重试');
+                setTimeout(() => initGraph(), 3000);
+            }
+
+            if (window.Chart) {
+                setTimeout(initWordCloud, 500);
+            } else {
+                console.error('Chart.js 未加载，词云将在3秒后重试');
+                setTimeout(initWordCloud, 3000);
+            }
+
+            // 绑定事件监听
+            bindEventListeners();
+        });
+
+        // 检查依赖是否加载
+        function checkDependencies() {
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js 尚未加载，请检查CDN链接');
+            }
+            if (typeof d3 === 'undefined') {
+                console.warn('D3.js 尚未加载，请检查CDN链接');
+            }
+        }
+
+        // 重试初始化图表组件
+        function initChartComponents() {
+            if (window.Chart) {
+                initAuthorBarChart();
+                initRhythmicPieChart();
+                initEmotionDoughnutChart();
+            } else {
+                console.error('Chart.js 仍未加载，图表无法初始化');
+            }
+        }
+
+        /**
+         * 绑定所有事件监听器
+         */
+        function bindEventListeners() {
+            // 图谱筛选按钮
+            document.getElementById('showAllBtn').addEventListener('click', () => {
+                setActiveButton('showAllBtn');
+                filterGraph('all');
+            });
+
+            document.getElementById('showAuthorsBtn').addEventListener('click', () => {
+                setActiveButton('showAuthorsBtn');
+                filterGraph('authors');
+            });
+
+            document.getElementById('showWorksBtn').addEventListener('click', () => {
+                setActiveButton('showWorksBtn');
+                filterGraph('works');
+            });
+
+            // 搜索功能
+            document.getElementById('authorSearch').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') {
+                    searchAuthor(e.target.value.trim());
+                }
+            });
+        }
+
+        /**
+         * 设置按钮激活状态
+         * @param {string} buttonId - 按钮ID
+         */
+        function setActiveButton(buttonId) {
+            // 移除所有按钮的激活状态
+            ['showAllBtn', 'showAuthorsBtn', 'showWorksBtn'].forEach(id => {
+                const btn = document.getElementById(id);
+                btn.classList.remove('bg-primary', 'text-white');
+                btn.classList.add('hover:bg-gray-100');
+            });
+
+            // 设置当前按钮为激活状态
+            const activeBtn = document.getElementById(buttonId);
+            activeBtn.classList.add('bg-primary', 'text-white');
+            activeBtn.classList.remove('hover:bg-gray-100');
+        }
+
+        /**
+         * 通用数据请求函数
+         * @param {string} url - 请求URL
+         * @returns {Promise} - 返回数据Promise
+         */
+        async function fetchData(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP错误: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`数据请求失败: ${error.message}`);
+                throw error; // 继续抛出错误供调用者处理
+            }
+        }
+
+        /**
+         * 显示图表错误信息
+         * @param {string} canvasId - 图表容器ID
+         * @param {string} message - 错误信息
+         */
+        function showChartError(canvasId, message) {
+            const canvas = document.getElementById(canvasId);
+            if (canvas) {
+                const container = canvas.parentElement;
+                container.innerHTML = `<div class="chart-error"><p class="font-sans">${message}</p></div>`;
+            }
+        }
+
+        /**
+         * 1. 作者产量榜 - 条形图
+         */
+        function initAuthorBarChart() {
+            // 确保Chart已加载
+            if (typeof Chart === 'undefined') {
+                showChartError('authorBarChart', 'Chart.js 未加载，无法显示图表');
+                return;
+            }
+
+            const ctx = document.getElementById('authorBarChart')?.getContext('2d');
+            if (!ctx) {
+                console.error('作者产量榜图表容器未找到');
+                return;
+            }
+
+            fetchData(API_PATHS.authorProductivity)
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        showChartError('authorBarChart', '暂无作者产量数据');
+                        return;
+                    }
+
+                    const authors = data.map(item => item.author);
+                    const counts = data.map(item => item.count);
+
+                    // 创建渐变
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                    gradient.addColorStop(0, CHART_COLORS.primary.medium);
+                    gradient.addColorStop(1, CHART_COLORS.primary.light);
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: authors,
+                            datasets: [{
+                                label: '作品数量',
+                                data: counts,
+                                backgroundColor: gradient,
+                                borderColor: CHART_COLORS.primary.main,
+                                borderWidth: 1,
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => `作品数量: ${context.raw}`
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: { display: false },
+                                    ticks: {
+                                        autoSkip: false,
+                                        maxRotation: 45,
+                                        minRotation: 45,
+                                        font: {
+                                            family: "'Noto Sans SC', 'Microsoft YaHei', sans-serif",
+                                            size: 11
+                                        }
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                                    ticks: {
+                                        stepSize: Math.max(1, Math.floor(Math.max(...counts) / 10)),
+                                        font: {
+                                            family: "'Noto Sans SC', 'Microsoft YaHei', sans-serif",
+                                            size: 11
+                                        }
+                                    }
+                                }
+                            },
+                            animation: {
+                                duration: 1500,
+                                easing: 'easeOutQuart'
+                            }
+                        }
+                    });
+                })
+                .catch(() => {
+                    showChartError('authorBarChart', '作者产量数据加载失败');
+                });
+        }
+
+        /**
+         * 2. 词牌热度榜 - 饼图
+         */
+        function initRhythmicPieChart() {
+            // 确保Chart已加载
+            if (typeof Chart === 'undefined') {
+                showChartError('rhythmicPieChart', 'Chart.js 未加载，无法显示图表');
+                return;
+            }
+
+            const ctx = document.getElementById('rhythmicPieChart')?.getContext('2d');
+            if (!ctx) {
+                console.error('词牌热度榜图表容器未找到');
+                return;
+            }
+
+            fetchData(API_PATHS.rhythmicPopularity)
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        showChartError('rhythmicPieChart', '暂无词牌热度数据');
+                        return;
+                    }
+
+                    const rhythmics = data.map(item => item.rhythmic);
+                    const counts = data.map(item => item.count);
+
+                    // 生成渐变色数组
+                    const colors = [
+                        CHART_COLORS.secondary.medium,
+                        'rgba(74, 103, 65, 0.6)',
+                        'rgba(74, 103, 65, 0.5)',
+                        'rgba(74, 103, 65, 0.4)',
+                        'rgba(74, 103, 65, 0.3)',
+                        'rgba(74, 103, 65, 0.25)',
+                        'rgba(74, 103, 65, 0.2)',
+                        'rgba(74, 103, 65, 0.15)'
+                    ];
+
+                    new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: rhythmics,
+                            datasets: [{
+                                data: counts,
+                                backgroundColor: colors,
+                                borderColor: 'white',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                    labels: {
+                                        boxWidth: 12,
+                                        padding: 15,
+                                        font: {
+                                            family: "'Noto Sans SC', 'Microsoft YaHei', sans-serif",
+                                            size: 12
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = Math.round((context.raw / total) * 100);
+                                            return `${context.label}: ${context.raw} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            },
+                            animation: {
+                                animateRotate: true,
+                                animateScale: true,
+                                duration: 1500,
+                                easing: 'easeOutQuart'
+                            }
+                        }
+                    });
+                })
+                .catch(() => {
+                    showChartError('rhythmicPieChart', '词牌热度数据加载失败');
+                });
+        }
+
+        /**
+         * 3. 词作情感分析 - 环形图
+         */
+        function initEmotionDoughnutChart() {
+            // 确保Chart已加载
+            if (typeof Chart === 'undefined') {
+                showChartError('emotionDoughnutChart', 'Chart.js 未加载，无法显示图表');
+                return;
+            }
+
+            const ctx = document.getElementById('emotionDoughnutChart')?.getContext('2d');
+            if (!ctx) {
+                console.error('情感分析图表容器未找到');
+                return;
+            }
+
+            fetchData(API_PATHS.emotionAnalysis)
+                .then(data => {
+                    if (!data) {
+                        showChartError('emotionDoughnutChart', '暂无情感分析数据');
+                        return;
+                    }
+
+                    const emotions = ['喜', '悲', '忧', '怒'];
+                    const counts = emotions.map(emotion => data[emotion] || 0);
+
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: emotions,
+                            datasets: [{
+                                data: counts,
+                                backgroundColor: [
+                                    CHART_COLORS.secondary.medium,
+                                    CHART_COLORS.primary.medium,
+                                    CHART_COLORS.accent.brown,
+                                    CHART_COLORS.accent.red
+                                ],
+                                borderColor: 'white',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            cutout: '65%',
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        boxWidth: 12,
+                                        font: {
+                                            family: "'Noto Sans SC', 'Microsoft YaHei', sans-serif",
+                                            size: 12
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = Math.round((context.raw / total) * 100);
+                                            return `${context.label}: ${context.raw} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            },
+                            animation: {
+                                animateRotate: true,
+                                animateScale: true,
+                                duration: 1500,
+                                easing: 'easeOutQuart'
+                            }
+                        }
+                    });
+                })
+                .catch(() => {
+                    showChartError('emotionDoughnutChart', '情感分析数据加载失败');
+                });
+        }
+
+
+        /**
+         * 4. 词作意象云
+         */
+        function initWordCloud() {
+            // 确保Chart已加载
+            if (typeof Chart === 'undefined') {
+                const loader = document.getElementById('wordCloudLoader');
+                loader.innerHTML = '<p class="text-red-500 font-sans">Chart.js 未加载，无法显示词云</p>';
+                return;
+            }
+
+            const canvas = document.getElementById('wordCloudCanvas');
+            const ctx = canvas?.getContext('2d');
+            const placeholder = document.getElementById('wordCloudPlaceholder');
+            const loader = document.getElementById('wordCloudLoader');
+
+            if (!canvas || !ctx) {
+                console.error('词云画布元素未找到');
+                return;
+            }
+
+            // 画布尺寸调整
+            function resizeCanvas() {
+                const container = canvas.parentElement;
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+            }
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            fetchData(`${API_PATHS.wordCloud}?limit=50`)
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        loader.innerHTML = '<p class="text-gray-500 font-sans">暂无词云数据</p>';
+                        return;
+                    }
+
+                    // 隐藏加载提示和占位符
+                    loader.style.display = 'none';
+                    placeholder.style.display = 'none';
+
+                    // 准备词云数据
+                    const maxValue = Math.max(...data.map(item => item.count));
+                    const wordData = data.map(item => ({
+                        text: item.word,
+                        value: item.count,
+                        weight: item.count / maxValue
+                    }));
+
+                    new Chart(ctx, {
+                        type: 'wordCloud',
+                        data: {
+                            labels: wordData.map(item => item.text),
+                            datasets: [{
+                                label: '词频',
+                                data: wordData.map(item => item.value),
+                                backgroundColor: () => {
+                                    const colors = [
+                                        CHART_COLORS.primary.main,
+                                        CHART_COLORS.primary.medium,
+                                        CHART_COLORS.primary.light,
+                                        CHART_COLORS.secondary.main,
+                                        CHART_COLORS.secondary.medium,
+                                        CHART_COLORS.secondary.light,
+                                        CHART_COLORS.accent.brown
+                                    ];
+                                    return colors[Math.floor(Math.random() * colors.length)];
+                                }
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => `${context.label}: ${context.raw}次`
+                                    }
+                                }
+                            },
+                            wordCloud: {
+                                rotation: {
+                                    min: -90,
+                                    max: 90,
+                                    steps: 3
+                                },
+                                spiral: 'archimedean',
+                                padding: 2,
+                                font: {
+                                    family: 'SimHei, Microsoft YaHei, SimSun, STSong, serif',
+                                },
+                                hover: {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                    color: 'white'
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('词云数据加载失败:', error);
+                    loader.innerHTML = `<p class="text-red-500 font-sans">加载失败: ${error.message}</p>`;
+                });
+        }
+
+
+        /**
+         * 5. 词人与作品图谱 - D3力导向图
+         */
+        let graphSimulation, graphNodes, graphLinks, graphSvg, allGraphData;
+
+        function initGraph() {
+            // 确保d3已加载
+            if (typeof d3 === 'undefined') {
+                const loader = document.getElementById('graphLoader');
+                loader.innerHTML = '<p class="text-red-500 font-sans">D3.js 未加载，无法显示图谱</p>';
+                return;
+            }
+
+            const container = document.getElementById('graphContainer');
+            if (!container) {
+                console.error('图谱容器未找到');
+                return;
+            }
+
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            // 创建SVG
+            graphSvg = d3.select('#graphContainer')
+                .append('svg')
+                .attr('width', '100%')
+                .attr('height', '100%')
+                .attr('viewBox', [0, 0, width, height]);
+
+            // 添加箭头标记
+            graphSvg.append('defs').selectAll('marker')
+                .data(['end'])
+                .enter().append('marker')
+                .attr('id', d => d)
+                .attr('viewBox', '0 -5 10 10')
+                .attr('refX', 25)
+                .attr('refY', 0)
+                .attr('markerWidth', 6)
+                .attr('markerHeight', 6)
+                .attr('orient', 'auto')
+                .append('path')
+                .attr('d', 'M0,-5L10,0L0,5')
+                .attr('fill', '#999');
+
+            // 加载图谱数据
+            fetchData(API_PATHS.authorWorkGraph)
+                .then(data => {
+                    allGraphData = data;
+                    document.getElementById('graphLoader').style.display = 'none';
+                    drawGraph(data);
+                })
+                .catch(error => {
+                    console.error('图谱数据加载失败:', error);
+                    document.getElementById('graphLoader').innerHTML =
+                        `<p class="text-red-500 font-sans">加载失败: ${error.message}</p>`;
+                });
+
+            // 窗口大小变化时重新绘制
+            window.addEventListener('resize', () => {
+                if (allGraphData) {
+                    drawGraph(allGraphData);
+                }
+            });
+        }
+
+
+        /**
+         * 绘制力导向图
+         * @param {Object} data - 图谱数据
+         */
+        function drawGraph(data) {
+            // 确保d3已加载
+            if (typeof d3 === 'undefined') {
+                console.error('D3.js 未加载，无法绘制图谱');
+                return;
+            }
+
+            const container = document.getElementById('graphContainer');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            // 清除现有图形
+            graphSvg.selectAll('*').remove();
+
+            // 重新添加箭头标记
+            graphSvg.append('defs').selectAll('marker')
+                .data(['end'])
+                .enter().append('marker')
+                .attr('id', d => d)
+                .attr('viewBox', '0 -5 10 10')
+                .attr('refX', 25)
+                .attr('refY', 0)
+                .attr('markerWidth', 6)
+                .attr('markerHeight', 6)
+                .attr('orient', 'auto')
+                .append('path')
+                .attr('d', 'M0,-5L10,0L0,5')
+                .attr('fill', '#999');
+
+            // 根据数据量动态调整力参数
+            const nodeCount = data.nodes.length;
+            const linkDistance = nodeCount > 50 ? 90 : 70; // 进一步缩短节点间距
+            const chargeStrength = nodeCount > 50 ? -280 : -220; // 进一步减弱排斥力
+            const authorRadius = nodeCount > 50 ? 38 : 33;
+            const workRadius = nodeCount > 50 ? 17 : 14;
+
+            // 创建力导向模拟 - 重点优化水平分布
+            graphSimulation = d3.forceSimulation(data.nodes)
+                .force('link', d3.forceLink(data.links)
+                    .id(d => d.id)
+                    .distance(linkDistance)
+                    .strength(0.95)) // 增强连接强度
+                .force('charge', d3.forceManyBody()
+                    .strength(chargeStrength)
+                    .distanceMin(25) // 缩小最小距离
+                    .distanceMax(180)) // 缩小最大距离
+                .force('center', d3.forceCenter(width / 2, height / 2)
+                    .strength(0.12)) // 降低中心吸引力
+                .force('collision', d3.forceCollide()
+                    .radius(d => d.type === 'author' ? authorRadius : workRadius)
+                    .iterations(3))
+                // 关键优化：减弱X轴中心吸引力，允许节点更向左右扩展
+                .force('x', d3.forceX(width / 2).strength(0.01))
+                .force('y', d3.forceY(height / 2).strength(0.03)); // Y轴保持适当吸引力
+
+            // 调整模拟参数
+            graphSimulation.alpha(0.8).alphaTarget(0).alphaDecay(0.025).restart();
+
+            // 绘制连接线
+            graphLinks = graphSvg.append('g')
+                .selectAll('line')
+                .data(data.links)
+                .enter().append('line')
+                .attr('stroke', '#999')
+                .attr('stroke-opacity', 0.6)
+                .attr('stroke-width', 1);
+
+            // 绘制节点
+            graphNodes = graphSvg.append('g')
+                .selectAll('.node')
+                .data(data.nodes)
+                .enter().append('g')
+                .attr('class', 'node')
+                .call(d3.drag()
+                    .on('start', dragstarted)
+                    .on('drag', dragged)
+                    .on('end', dragended));
+
+            // 添加节点圆圈
+            graphNodes.append('circle')
+                .attr('r', d => d.type === 'author' ? (nodeCount > 50 ? 22 : 20) : (nodeCount > 50 ? 12 : 10))
+                .attr('fill', d => d.type === 'author' ?
+                    CHART_COLORS.secondary.medium : 'rgba(210, 180, 140, 0.8)')
+                .attr('stroke', d => d.type === 'author' ?
+                    CHART_COLORS.secondary.main : 'rgba(210, 180, 140, 1)')
+                .attr('stroke-width', 1.5);
+
+            // 添加节点文本 - 优化文本位置，避免超出边界
+            graphNodes.append('text')
+                .attr('dx', d => {
+                    // 根据节点位置自动调整文本方向，避免右侧文本超出边界
+                    if (d.x > width * 0.7) return -15;
+                    return d.type === 'author' ? 25 : 15;
+                })
+                .attr('dy', '.35em')
+                .attr('text-anchor', d => d.x > width * 0.7 ? 'end' : 'start')
+                .text(d => d.name)
+                .style('font-size', d => d.type === 'author' ? '14px' : '11px')
+                .style('font-family', "'Noto Sans SC', 'Microsoft YaHei', sans-serif")
+                .style('fill', '#333')
+                .style('pointer-events', 'none');
+
+            // 添加提示框
+            graphNodes.append('title')
+                .text(d => d.type === 'author' ?
+                    `词人: ${d.name}\n作品数量: ${d.count}` : `作品: ${d.name}`);
+
+            // 更新布局 - 重点优化左右边界
+            graphSimulation.on('tick', () => {
+                // 左右边距大幅减小，上下边距保持适当
+                const horizontalMargin = 20; // 左右边距从40减到20
+                const verticalMargin = 40;   // 上下边距保持40
+                data.nodes.forEach(d => {
+                    d.x = Math.max(horizontalMargin, Math.min(width - horizontalMargin, d.x));
+                    d.y = Math.max(verticalMargin, Math.min(height - verticalMargin, d.y));
+                });
+
+                graphLinks
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+
+                graphNodes.attr('transform', d => `translate(${d.x},${d.y})`);
+            });
+        }
+
+
+        /**
+         * 拖拽开始
+         */
+        function dragstarted(event, d) {
+            if (!event.active) graphSimulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        /**
+         * 拖拽中
+         */
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        /**
+         * 拖拽结束
+         */
+        function dragended(event, d) {
+            if (!event.active) graphSimulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        /**
+         * 筛选图谱显示
+         * @param {string} type - 筛选类型: all/authors/works
+         */
+        function filterGraph(type) {
+            if (!allGraphData) return;
+
+            let filteredNodes, filteredLinks;
+            const authorLegend = document.getElementById('authorLegendItem');
+            const workLegend = document.getElementById('workLegendItem');
+
+            switch(type) {
+                case 'authors':
+                    filteredNodes = allGraphData.nodes.filter(node => node.type === 'author');
+                    filteredLinks = [];
+                    // 只显示词人图例
+                    authorLegend.style.display = 'flex';
+                    workLegend.style.display = 'none';
+                    break;
+                case 'works':
+                    filteredNodes = allGraphData.nodes.filter(node => node.type === 'work');
+                    filteredLinks = [];
+                    // 只显示作品图例
+                    authorLegend.style.display = 'none';
+                    workLegend.style.display = 'flex';
+                    break;
+                default:
+                    filteredNodes = allGraphData.nodes;
+                    filteredLinks = allGraphData.links;
+                    // 显示全部图例
+                    authorLegend.style.display = 'flex';
+                    workLegend.style.display = 'flex';
+            }
+
+            drawGraph({ nodes: filteredNodes, links: filteredLinks });
+        }
+
+        /**
+         * 搜索词人
+         * @param {string} authorName - 词人名称
+         */
+        function searchAuthor(authorName) {
+            if (!allGraphData || !authorName) {
+                drawGraph(allGraphData);
+                return;
+            }
+
+            // 查找匹配的词人
+            const authorNode = allGraphData.nodes.find(
+                node => node.type === 'author' &&
+                node.name.toLowerCase().includes(authorName.toLowerCase())
+            );
+
+            if (!authorNode) {
+                alert('未找到该词人');
+                return;
+            }
+
+            // 找到该词人的所有作品
+            const workIds = allGraphData.links
+                .filter(link => link.source.id === authorNode.id)
+                .map(link => link.target.id);
+
+            // 筛选节点和连接
+            const filteredNodes = allGraphData.nodes.filter(
+                node => node.id === authorNode.id || workIds.includes(node.id)
+            );
+
+            const filteredLinks = allGraphData.links.filter(
+                link => link.source.id === authorNode.id && workIds.includes(link.target.id)
+            );
+
+            drawGraph({ nodes: filteredNodes, links: filteredLinks });
+        }
+    </script>
+{% endblock %}

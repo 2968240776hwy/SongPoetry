@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}对话详情 - 宋词雅韵{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h3 class="mb-4">对话详情</h3>
+    <ul class="list-group">
+        <li class="list-group-item"><strong>ID：</strong> {{ dialogue.id }}</li>
+        <li class="list-group-item"><strong>用户名：</strong> {{ dialogue.username }}</li>
+        <li class="list-group-item"><strong>问题：</strong> {{ dialogue.question }}</li>
+        <li class="list-group-item"><strong>回答：</strong> {{ dialogue.answer }}</li>
+        <li class="list-group-item"><strong>时间：</strong> {{ dialogue.create_time|date:"Y-m-d H:i:s" }}</li>
+    </ul>
+    <div class="mt-3">
+        <a href="{% url 'manager:dialogue_edit' dialogue.id %}" class="btn btn-warning">编辑</a>
+        <a href="{% url 'manager:dialogue_delete' dialogue.id %}" class="btn btn-danger"
+           onclick="return confirm('确认删除此记录吗？');">删除</a>
+        <a href="{% url 'manager:dialogue_list' %}" class="btn btn-secondary">返回列表</a>
+    </div>
+</div>
+{% endblock %}

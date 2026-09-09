@@ -1,0 +1,351 @@
+{% extends 'base.html' %} <!-- 继承公共导航栏模板 -->
+
+{% block title %}注册 - 宋词雅韵{% endblock %}
+
+{% block extra_css %}
+    <style>
+        /* 基础优化：控制整体高度，避免滚动 */
+        body {
+            padding-top: 60px;
+            padding-bottom: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* 注册容器：精准适配剩余视口 */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 120px);
+            padding: 15px 0;
+        }
+
+        /* 注册卡片 */
+        .login-card {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            padding: 30px;
+            width: 100%;
+            max-width: 480px;
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+
+        .login-card:hover {
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            transform: translateY(-5px);
+        }
+
+        /* 标题样式 */
+        .login-title {
+            color: #5d4b36;
+            font-weight: 700;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        .login-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 2px;
+            background-color: #8b7d6b;
+            border-radius: 3px;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .form-label {
+            color: #5d4b36;
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: block;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            border: 1px solid #e6dfd0;
+            border-radius: 6px;
+            padding: 10px 15px;
+            font-size: 0.95rem;
+            color: #3a3226;
+            background-color: #fcfbfa;
+        }
+
+        /* 提示信息 */
+        .tip-message {
+            color: #8b7d6b;
+            font-size: 0.8rem;
+            margin-top: 3px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tip-message i {
+            margin-right: 5px;
+            font-size: 0.75rem;
+        }
+
+        /* 错误提示 */
+        .error-message {
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-top: 3px;
+            display: flex;
+            align-items: center;
+        }
+
+        .error-message i {
+            margin-right: 5px;
+            font-size: 0.8rem;
+        }
+
+        /* 成功提示 */
+        .success-message {
+            color: #28a745;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            text-align: center;
+            padding: 8px;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            background-color: #f8f9fa;
+        }
+
+        /* 按钮样式 */
+        .login-btn {
+            background-color: #8b7d6b;
+            color: #f5f1e6;
+            border: none;
+            padding: 10px 0;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        /* 登录跳转链接 */
+        .login-section {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #e6dfd0;
+            font-size: 0.95rem;
+        }
+
+        /* 装饰元素 */
+        .decor-element {
+            position: absolute;
+            opacity: 0.15;
+            z-index: 0;
+        }
+
+        .decor-top {
+            top: -10px;
+            right: -10px;
+            font-size: 60px;
+            transform: rotate(15deg);
+        }
+
+        .decor-bottom {
+            bottom: -20px;
+            left: -5px;
+            font-size: 50px;
+            transform: rotate(-10deg);
+        }
+
+        /* 响应式优化 */
+        @media (max-width: 576px) {
+            .login-card {
+                padding: 25px 15px;
+                margin: 0 10px;
+            }
+
+            .login-title {
+                font-size: 1.3rem;
+                margin-bottom: 15px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            .login-section {
+                margin-top: 15px;
+                padding-top: 10px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* 隐藏页脚 */
+        footer {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <!-- 注册区域 -->
+    <div class="login-container">
+        <div class="login-card position-relative">
+            <!-- 装饰元素 -->
+            <i class="fa fa-pagelines decor-element decor-top"></i>
+            <i class="fa fa-book decor-element decor-bottom"></i>
+
+            <!-- 注册标题 -->
+            <h2 class="login-title">
+                <i class="fa fa-user-plus mr-2"></i>用户注册
+            </h2>
+
+            <!-- 注册表单区域 -->
+            <div class="tab-content" id="registerTabContent">
+                <div class="tab-pane fade show active" id="user-register" role="tabpanel">
+                    <!-- 注册成功提示 -->
+                    {% if register_success %}
+                        <div class="success-message">
+                            <i class="fa fa-check-circle mr-2"></i>{{ register_success }}，即将跳转至登录页...
+                        </div>
+                    {% endif %}
+
+                    <form action="{% url 'accounts:register' %}" method="post" class="needs-validation" novalidate
+                          id="registerForm">
+                        {% csrf_token %}
+
+                        <!-- 用户名输入框 -->
+                        <div class="form-group">
+                            <label for="user-username" class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="user-username" name="username" required
+                                   placeholder="请输入3-16位用户名（字母/数字/下划线）" maxlength="16" minlength="3">
+                            <div class="invalid-feedback">请输入3-16位用户名（字母/数字/下划线）</div>
+                            {% if username_error %}
+                                <div class="error-message"><i class="fa fa-exclamation-circle"></i>{{ username_error }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 邮箱输入框 -->
+                        <div class="form-group">
+                            <label for="user-email" class="form-label">邮箱</label>
+                            <input type="email" class="form-control" id="user-email" name="email" required
+                                   placeholder="请输入有效邮箱地址">
+                            <div class="invalid-feedback">请输入有效邮箱地址（如：xxx@xxx.com）</div>
+                            {% if email_error %}
+                                <div class="error-message"><i class="fa fa-exclamation-circle"></i>{{ email_error }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 密码输入框 -->
+                        <div class="form-group">
+                            <label for="user-password" class="form-label">密码</label>
+                            <input type="password" class="form-control" id="user-password" name="password" required
+                                   placeholder="请输入6-20位密码（含字母和数字）" maxlength="20" minlength="6">
+                            <div class="invalid-feedback">请输入6-20位密码（含字母和数字）</div>
+                            <div class="tip-message"><i class="fa fa-lightbulb-o"></i>建议包含大小写字母、数字和特殊符号，提高安全性
+                            </div>
+                        </div>
+
+                        <!-- 确认密码输入框 -->
+                        <div class="form-group">
+                            <label for="user-password-confirm" class="form-label">确认密码</label>
+                            <input type="password" class="form-control" id="user-password-confirm"
+                                   name="password_confirm" required placeholder="请再次输入密码">
+                            <div class="invalid-feedback" id="passwordConfirmFeedback">请再次输入密码</div>
+                            <div class="error-message d-none" id="passwordMismatch"><i
+                                    class="fa fa-exclamation-circle"></i>两次输入的密码不一致
+                            </div>
+                            {% if password_error %}
+                                <div class="error-message"><i class="fa fa-exclamation-circle"></i>{{ password_error }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- 注册按钮 -->
+                        <button type="submit" class="btn login-btn">注册</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 已有账号跳转登录 -->
+            <div class="login-section">
+                <p>已有账号？<a href="{% url 'accounts:user_login' %}" class="login-link">立即登录</a></p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- 注册页专属JS -->
+    <script>
+        // 1. 基础表单验证+密码一致性检查
+        (function () {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    // 密码一致性校验
+                    const password = document.getElementById('user-password').value;
+                    const passwordConfirm = document.getElementById('user-password-confirm').value;
+                    const passwordMismatch = document.getElementById('passwordMismatch');
+                    const passwordConfirmFeedback = document.getElementById('passwordConfirmFeedback');
+                    let isPasswordValid = true;
+
+                    if (password !== passwordConfirm) {
+                        passwordMismatch.classList.remove('d-none');
+                        passwordConfirmFeedback.textContent = '两次输入的密码不一致';
+                        isPasswordValid = false;
+                    } else {
+                        passwordMismatch.classList.add('d-none');
+                        passwordConfirmFeedback.textContent = '请再次输入密码';
+                    }
+
+                    // 验证不通过则阻止提交
+                    if (!form.checkValidity() || !isPasswordValid) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+
+        // 2. 实时检查密码一致性（输入时反馈）
+        document.getElementById('user-password-confirm').addEventListener('input', function () {
+            const password = document.getElementById('user-password').value;
+            const passwordConfirm = this.value;
+            const passwordMismatch = document.getElementById('passwordMismatch');
+            const passwordConfirmFeedback = document.getElementById('passwordConfirmFeedback');
+
+            if (passwordConfirm && password !== passwordConfirm) {
+                passwordMismatch.classList.remove('d-none');
+                passwordConfirmFeedback.textContent = '两次输入的密码不一致';
+            } else {
+                passwordMismatch.classList.add('d-none');
+                passwordConfirmFeedback.textContent = '请再次输入密码';
+            }
+        });
+
+        // 3. 注册成功后自动跳转
+        {% if register_success %}
+            setTimeout(function () {
+                window.location.href = "{% url 'accounts:user_login' %}";
+            }, 3000); // 3秒后跳转至登录页
+        {% endif %}
+    </script>
+{% endblock %}

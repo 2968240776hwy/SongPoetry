@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}{% if edit_user %}编辑用户{% else %}添加用户{% endif %} - 宋词雅韵{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h3 class="mb-4">{% if edit_user %}编辑用户{% else %}添加用户{% endif %}</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">用户名</label>
+            <input type="text" name="username" class="form-control" value="{{ edit_user.username|default_if_none:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">邮箱</label>
+            <input type="email" name="email" class="form-control" value="{{ edit_user.email|default_if_none:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">密码{% if edit_user %}（留空则不修改）{% endif %}</label>
+            <input type="password" name="password" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">用户类型</label>
+            <select name="user_type" class="form-select">
+                <option value="0" {% if edit_user.user_type == 0 %}selected{% endif %}>普通用户</option>
+                <option value="1" {% if edit_user.user_type == 1 %}selected{% endif %}>管理员</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-success">保存</button>
+        <a href="{% url 'manager:user_list' %}" class="btn btn-secondary">取消</a>
+    </form>
+</div>
+{% endblock %}

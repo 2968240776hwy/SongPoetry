@@ -15,7 +15,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -27,7 +26,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -37,11 +35,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'apps.home',          # 注册首页app
-    'apps.search',        # 注册检索app
-    'apps.visualization', # 注册可视化app
-    'apps.sushi_qa',      # 注册苏轼问答app
+    'apps.home',  # 注册首页app
+    'apps.search',  # 注册检索app
+    'apps.visualization',  # 注册可视化app
+    'apps.sushi_qa',  # 注册苏轼问答app
+    'apps.accounts',
+    'apps.manager',
 ]
+
+AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -58,8 +60,7 @@ ROOT_URLCONF = "SongPoetry.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / 'templates']
-        ,
+        "DIRS": [BASE_DIR / 'templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -73,17 +74,28 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "SongPoetry.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        # 数据库引擎：MySQL
+        'ENGINE': 'django.db.backends.mysql',
+        # 数据库名称
+        'NAME': 'songci_db',
+        # 数据库用户名
+        'USER': 'root',
+        # 数据库密码
+        'PASSWORD': 'root',
+        # 数据库主机地址（本地为localhost或127.0.0.1）
+        'HOST': 'localhost',
+        # 数据库端口（MySQL默认3306）
+        'PORT': '3306',
+        # 数据库编码
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -103,7 +115,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -115,15 +126,105 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
-STATICFILES_DIRS = [BASE_DIR / 'static']  # 开发时静态文件存放目录
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # 部署时收集静态文件的目录（可选）
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# 媒体文件配置
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Neo4j 配置
+NEO4J_CONFIG = {
+    'default': {
+        'URI': 'bolt://localhost',
+        'USERNAME': 'neo4j',
+        'PASSWORD': '123456789',
+        'DATABASE': 'neo4j',
+        'BATCH_SIZE': 1000,
+        'CONSTRAINTS': [
+            "create constraint chunk_id if not exists for (c:__Chunk__) require c.id is unique",
+            "create constraint document_id if not exists for (d:__Document__) require d.id is unique",
+            "create constraint community_id if not exists for (c:__Community__) require c.community is unique",
+            "create constraint entity_id if not exists for (e:__Entity__) require e.id is unique",
+            "create constraint entity_title if not exists for (e:__Entity__) require e.name is unique",
+            "create constraint covariate_title if not exists for (e:__Covariate__) require e.title is unique",
+            "create constraint related_id if not exists for ()-[rel:RELATED]->() require rel.id is unique"
+        ]
+    }
+}
+
+# GRAPHRAG 路径
+GRAPHRAG_FOLDER = MEDIA_ROOT / "artifacts"
+LANCEDB_URI = GRAPHRAG_FOLDER / "lancedb"
+
+# 提升单次请求允许上传的文件数量
+DATA_UPLOAD_MAX_NUMBER_FILES = 10000
+
+# 提升内存中处理的文件大小阈值（超过该值会写入临时文件，单位：字节）
+FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
+
+# 提升POST请求的最大数据量（单位：字节）
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024 * 1024
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# 问答模块配置
+LLM_CONFIG = {
+    'default': {
+        'API_KEY': "sk-5e58c7372c784d64b2c805209799571f",
+        'API_BASE': 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        'API_TYPE': 'OpenAI',
+
+        # 模型配置
+        'LLM_MODEL': 'qwen-plus',
+        'EMBEDDING_MODEL': 'text-embedding-v2',
+
+        # 本地搜索上下文参数
+        'LOCAL_CONTEXT_PARAMS': {
+            'text_unit_prop': 0.5,
+            'community_prop': 0.1,
+            'conversation_history_max_turns': 5,
+            'conversation_history_user_turns_only': True,
+            'top_k_mapped_entities': 10,
+            'top_k_relationships': 10,
+            'include_entity_rank': True,
+            'include_relationship_weight': True,
+            'include_community_rank': True,
+            'return_candidate_context': True,
+            'embedding_vectorstore_key': 'id',
+            'max_tokens': 12000,
+        },
+
+        # LLM 生成参数
+        'LLM_PARAMS': {
+            'max_tokens': 2000,
+            'temperature': 0.0,
+        },
+
+        # GraphRAG 常量
+        'COMMUNITY_LEVEL': 2,
+        'RESPONSE_TYPE': 'multiple paragraphs',
+        'TOKEN_ENCODING': 'cl100k_base',
+    }
+}
+
+# ==================== GraphRAG 数据表名配置 ====================
+GRAPHRAG_TABLES = {
+    'COMMUNITY_REPORT_TABLE': 'create_final_community_reports',
+    'ENTITY_TABLE': 'create_final_nodes',
+    'ENTITY_EMBEDDING_TABLE': 'create_final_entities',
+    'RELATIONSHIP_TABLE': 'create_final_relationships',
+    'TEXT_UNIT_TABLE': 'create_final_text_units',
+}
+
+
+# settings.py
+TIME_ZONE = 'Asia/Shanghai'
+USE_TZ = True

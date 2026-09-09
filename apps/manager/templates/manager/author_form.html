@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}{% if author %}编辑词人{% else %}添加词人{% endif %} - 宋词雅韵{% endblock %}
+{% block content %}
+<div class="container mt-5" style="max-width: 700px;">
+    <h3 class="mb-4">{% if author %}编辑词人{% else %}添加词人{% endif %}</h3>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">词人姓名</label>
+            <input type="text" name="name" class="form-control" value="{{ author.name|default_if_none:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">简介（短）</label>
+            <textarea name="short_desc" class="form-control" rows="3">{{ author.short_desc|default_if_none:'' }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">介绍（长）</label>
+            <textarea name="long_desc" class="form-control" rows="6">{{ author.long_desc|default_if_none:'' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-success">保存</button>
+        <a href="{% url 'manager:author_list' %}" class="btn btn-secondary ms-2">取消</a>
+    </form>
+</div>
+{% endblock %}

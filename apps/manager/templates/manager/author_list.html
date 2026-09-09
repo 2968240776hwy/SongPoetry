@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}词人管理 - 宋词雅韵{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">词人管理</h3>
+        <form method="get" class="d-flex mb-3">
+            <input type="text" name="q" class="form-control me-2" placeholder="搜索作者或简介" value="{{ query }}">
+            <button type="submit" class="btn btn-primary">搜索</button>
+        </form>
+
+        <div>
+            <a href="{% url 'manager:manager_home' %}" class="btn btn-outline-secondary me-2">
+                <i class="fa fa-arrow-left"></i> 返回
+            </a>
+            <a href="{% url 'manager:author_create' %}" class="btn btn-primary">
+                <i class="fa fa-plus"></i> 添加词人
+            </a>
+        </div>
+    </div>
+
+    <table class="table table-striped table-hover align-middle shadow-sm rounded">
+        <thead class="table-light">
+            <tr class="text-center">
+                <th>编号</th>
+                <th>姓名</th>
+                <th>简介</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in authors %}
+            <tr class="text-center">
+                <td>{{ a.value }}</td>
+                <td><a href="{% url 'manager:author_detail' a.value %}" class="text-decoration-none">{{ a.name }}</a></td>
+                <td>{{ a.short_desc|truncatechars:40 }}</td>
+                <td>
+                    <a href="{% url 'manager:author_edit' a.value %}" class="btn btn-sm btn-warning me-1">编辑</a>
+                    <a href="{% url 'manager:author_delete' a.value %}" class="btn btn-sm btn-danger"
+                       onclick="return confirm('确认删除该词人吗？');">删除</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center text-muted py-4">暂无词人信息</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if authors.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ authors.previous_page_number }}&q={{ q }}&user_type={{ user_type }}">上一页</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">上一页</span></li>
+            {% endif %}
+
+            {% for num in authors.paginator.page_range %}
+                {% if authors.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num >= authors.number|add:'-3' and num <= authors.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}&q={{ q }}&user_type={{ user_type }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if authors.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ authors.next_page_number }}&q={{ q }}&user_type={{ user_type }}">下一页</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">下一页</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+</div>
+{% endblock %}

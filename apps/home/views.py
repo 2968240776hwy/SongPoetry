@@ -1,9 +1,5 @@
 from django.shortcuts import render
 
-# Create your views here.
-# apps/home/views.py
-from django.shortcuts import render
-
 
 def index(request):
     # 可以在这里查询数据库，获取轮播的宋词数据
@@ -12,3 +8,15 @@ def index(request):
         {"title": "水调歌头·明月几时有", "content": "明月几时有..."},
     ]
     return render(request, 'home/index.html', {"poems": poems})  # 传递数据到模板
+
+
+def about(request):
+    return render(request, 'home/about.html')  # 模板放在 home 目录下
+
+
+def contact(request):
+    return render(request, 'home/contact.html')
+
+
+def terms(request):
+    return render(request, 'home/terms.html')

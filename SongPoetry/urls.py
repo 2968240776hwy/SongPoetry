@@ -26,4 +26,10 @@ urlpatterns = [
     path('search/', include('apps.search.urls')),  # 宋词检索路由
     path('visualization/', include('apps.visualization.urls')),  # 可视化路由
     path('sushi-qa/', include('apps.sushi_qa.urls')),  # 苏轼问答路由
+    path('accounts/', include('apps.accounts.urls')),  # 登录页
+    path('manager/', include('apps.manager.urls')),  # 管理员功能路由
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)  # 开发时静态文件访问
+
+# 开发环境下提供媒体文件的访问
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

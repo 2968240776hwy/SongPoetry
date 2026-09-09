@@ -1,0 +1,29 @@
+{% extends 'base.html' %}  <!-- 继承根目录的 base.html -->
+
+{% block content %}
+<div class="text-center mb-10">
+    <h1 class="text-3xl font-bold">联系方式</h1>
+    <div class="w-24 h-1 bg-accent mx-auto mt-3 rounded-full"></div>
+</div>
+
+<div class="max-w-2xl mx-auto bg-light p-8 rounded-lg shadow-md border border-secondary/30">
+    <div class="flex flex-col items-center text-center space-y-6">
+        <div class="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
+            <i class="fa fa-envelope text-2xl"></i>
+        </div>
+
+        <h2 class="text-xl font-semibold text-primary">邮件联系</h2>
+
+        <p class="text-lg">如果您有任何问题、建议或合作意向，欢迎通过以下邮箱与我们联系：</p>
+
+        <div class="mt-4 p-4 bg-white rounded border border-secondary/20 w-full max-w-md">
+            <p class="text-dark font-medium">
+                <i class="fa fa-at text-accent mr-2"></i>
+                songciyayun@example.com
+            </p>
+        </div>
+
+        <p class="text-sm text-dark/70 mt-2">我们通常会在1-3个工作日内回复您的邮件</p>
+    </div>
+</div>
+{% endblock %}

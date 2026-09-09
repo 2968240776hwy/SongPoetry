@@ -1,415 +1,79 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智能问答 - 宋词雅韵</title>
-    <!-- 引入Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- 引入Font Awesome图标 -->
+{% load markdown_filters %}
+
+{% block title %}智能问答 - 宋词雅韵{% endblock %}
+
+{% block extra_css %}
+    <!-- Font Awesome图标库 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
-    <style>
-        /* 基础样式保持与主界面一致 */
-        body {
-            background-color: #f5f1e6;
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d2c8b0' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
-            color: #3a3226;
-            font-family: "Noto Serif SC", "SimSun", serif;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+    <!-- 代码高亮样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+    <!-- 引入智能问答页面专属样式 -->
+    <link rel="stylesheet" href="{% static 'css/sushi_qa.css' %}">
+{% endblock %}
 
-        /* 导航栏样式复用主界面 */
-        .navbar-custom {
-            background-color: #8b7d6b;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .navbar-custom .navbar-brand {
-            color: #f5f1e6;
-            font-size: 1.8rem;
-            font-weight: bold;
-            letter-spacing: 0.1em;
-        }
-
-        .navbar-custom .nav-link {
-            color: #f5f1e6;
-            margin: 0 15px;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .navbar-custom .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background-color: #d9c8a9;
-            transition: width 0.3s ease;
-        }
-
-        .navbar-custom .nav-link:hover::after,
-        .navbar-custom .nav-link.active::after {
-            width: 100%;
-        }
-
-        .navbar-custom .nav-link:hover,
-        .navbar-custom .nav-link.active {
-            color: #d9c8a9;
-        }
-
-        /* 主内容区布局 */
-        .main-container {
-            flex: 1;
-            padding: 20px 0;
-        }
-
-        .qa-container {
-            background-color: rgba(255, 255, 255, 0.85);
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            overflow: hidden;
-            height: 700px; /* 固定高度 */
-        }
-
-        /* 左侧历史记录 */
-        .history-sidebar {
-            background-color: #f9f6f0;
-            border-right: 1px solid #e6dfd0;
-            height: 100%;
-            padding: 0;
-            overflow-y: auto; /* 滚动显示 */
-        }
-
-        .history-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid #e6dfd0;
-            background-color: #f0e9dd;
-        }
-
-        .history-title {
-            margin: 0;
-            font-size: 1.2rem;
-            color: #5d4b36;
-            font-weight: bold;
-        }
-
-        .history-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .history-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid #e6dfd0;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .history-item:hover {
-            background-color: #f0e9dd;
-        }
-
-        .history-item.active {
-            background-color: #e6dfd0;
-            border-left: 3px solid #8b7d6b;
-        }
-
-        .history-question {
-            font-size: 0.95rem;
-            color: #5d4b36;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .history-time {
-            font-size: 0.8rem;
-            color: #9b8c75;
-            margin-top: 5px;
-        }
-
-        /* 右侧问答区 */
-        .chat-area {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* 回答展示区 */
-        .chat-content {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto; /* 滚动显示 */
-        }
-
-        /* 系统提示 */
-        .system-prompt {
-            background-color: #f0e9dd;
-            padding: 15px 20px;
-            border-radius: 6px;
-            margin-bottom: 25px;
-            font-size: 0.95rem;
-            color: #5d4b36;
-            border-left: 3px solid #8b7d6b;
-        }
-
-        /* 问答气泡 */
-        .message {
-            margin-bottom: 25px;
-            max-width: 85%;
-        }
-
-        .user-message {
-            margin-left: auto; /* 用户消息右对齐 */
-        }
-
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: inline-block;
-            vertical-align: top;
-            margin-right: 10px;
-        }
-
-        .message-content {
-            display: inline-block;
-            padding: 12px 18px;
-            border-radius: 12px;
-            line-height: 1.8;
-            font-size: 1.05rem;
-        }
-
-        .user-message .message-content {
-            background-color: #8b7d6b;
-            color: #f5f1e6;
-            border-bottom-right-radius: 4px; /* 右下角小角度 */
-        }
-
-        .assistant-message .message-content {
-            background-color: #f0e9dd;
-            color: #3a3226;
-            border-bottom-left-radius: 4px; /* 左下角小角度 */
-        }
-
-        /* 输入区域 */
-        .input-area {
-            padding: 15px 20px;
-            border-top: 1px solid #e6dfd0;
-            background-color: #f9f6f0;
-        }
-
-        .input-form {
-            display: flex;
-            gap: 10px;
-        }
-
-        .question-input {
-            flex: 1;
-            padding: 15px 20px;
-            border: 1px solid #e6dfd0;
-            border-radius: 25px;
-            resize: none;
-            height: 50px;
-            font-size: 1rem;
-            font-family: inherit;
-            transition: border-color 0.3s ease;
-        }
-
-        .question-input:focus {
-            outline: none;
-            border-color: #8b7d6b;
-        }
-
-        .send-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #8b7d6b;
-            color: #f5f1e6;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .send-btn:hover {
-            background-color: #6b5c47;
-        }
-
-        /* 页脚样式 */
-        footer {
-            background-color: #8b7d6b;
-            color: #f5f1e6;
-            padding: 20px 0;
-            margin-top: 30px;
-        }
-
-        .footer-content {
-            text-align: center;
-            font-size: 0.9rem;
-        }
-
-        /* 响应式调整 */
-        @media (max-width: 768px) {
-            .qa-container {
-                height: 600px;
-            }
-
-            .history-sidebar {
-                position: fixed;
-                z-index: 100;
-                top: 56px;
-                left: 0;
-                width: 250px;
-                height: calc(100vh - 56px);
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-
-            .history-sidebar.show {
-                transform: translateX(0);
-            }
-
-            .toggle-history {
-                display: block !important;
-                position: fixed;
-                bottom: 80px;
-                left: 15px;
-                z-index: 99;
-                width: 45px;
-                height: 45px;
-                border-radius: 50%;
-                background-color: #8b7d6b;
-                color: white;
-                border: none;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            }
-
-            .chat-content {
-                padding: 20px 15px;
-            }
-
-            .message {
-                max-width: 80%;
-            }
-        }
-
-        .toggle-history {
-            display: none; /* 仅在移动端显示 */
-        }
-    </style>
-</head>
-<body>
-    <!-- 导航栏 -->
-    <nav class="navbar navbar-expand-lg navbar-custom">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="fa fa-book mr-2"></i>宋词雅韵
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon text-white"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">
-                            <i class="fa fa-home mr-1"></i>首页
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'search' %}">
-                            <i class="fa fa-search mr-1"></i>宋词知识检索
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'visualization' %}">
-                            <i class="fa fa-bar-chart mr-1"></i>知识可视化
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{% url 'sushi_qa' %}">
-                            <i class="fa fa-comments mr-1"></i>智能问答
-                        </a>
-                    </li>
-                    <li class="nav-item">
-{#                        <a class="nav-link" href="{% url 'about' %}">#}
-{#                            <i class="fa fa-info-circle mr-1"></i>关于系统#}
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- 主内容区 -->
+{% block content %}
     <div class="container main-container">
-        <div class="qa-container row m-0">
-            <!-- 左侧历史记录 -->
-            <div class="history-sidebar col-md-3 p-0">
+        <div class="qa-container">
+            <!-- 左侧：历史会话区（动态渲染） -->
+            <div class="history-sidebar">
                 <div class="history-header">
                     <h3 class="history-title">历史问答</h3>
                 </div>
                 <ul class="history-list">
-                    <li class="history-item active">
-                        <div class="history-question">苏轼的《水调歌头·明月几时有》创作于什么时候？</div>
-                        <div class="history-time">今天 10:23</div>
-                    </li>
-                    <li class="history-item">
-                        <div class="history-question">苏轼在宋词发展中的地位是什么？</div>
-                        <div class="history-time">今天 09:45</div>
-                    </li>
-                    <li class="history-item">
-                        <div class="history-question">苏轼有哪些著名的词作？</div>
-                        <div class="history-time">昨天 16:18</div>
-                    </li>
-                    <li class="history-item">
-                        <div class="history-question">苏轼被贬黄州期间创作了哪些作品？</div>
-                        <div class="history-time">昨天 14:32</div>
-                    </li>
-                    <li class="history-item">
-                        <div class="history-question">如何理解苏轼词中的"豪放"风格？</div>
-                        <div class="history-time">2023-10-27 19:05</div>
-                    </li>
+                    {% if user.is_authenticated %}
+                        {% if user_dialogues %}
+                            <!-- 有历史会话：循环渲染并绑定data-id -->
+                            {% for dialogue in user_dialogues %}
+                                <li class="history-item {% if forloop.first %}active{% endif %}"
+                                    data-id="{{ dialogue.id }}"
+                                    data-time="{{ dialogue.create_time|date:"Y-m-d H:i:s" }}">
+                                    <div class="history-question">
+                                        {{ dialogue.question }}
+                                    </div>
+                                    <div class="history-time">
+                                        {{ dialogue.create_time|date:"Y-m-d H:i" }}
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <!-- 无历史会话提示 -->
+                            <li class="history-empty">
+                                <div>
+                                    <i class="fa fa-history mr-2"></i>暂无历史会话
+                                </div>
+                            </li>
+                        {% endif %}
+                    {% else %}
+                        <!-- 未登录提示 -->
+                        <li class="history-empty">
+                            <div>
+                                <i class="fa fa-user-o mr-2"></i>登录后可查看历史会话
+                            </div>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
 
-            <!-- 右侧问答区 -->
-            <div class="chat-area col-md-9 p-0">
-                <!-- 回答展示区 -->
+            <!-- 右侧：对话区 -->
+            <div class="chat-container">
                 <div class="chat-content">
-                    <!-- 系统提示 -->
                     <div class="system-prompt">
                         <i class="fa fa-lightbulb-o mr-2"></i>欢迎使用智能问答系统！我可以为您解答关于苏轼生平、词作背景、艺术特色等问题，例如："苏轼的《念奴娇·赤壁怀古》表达了什么情感？"
                     </div>
 
-                    <!-- 问答记录 -->
-                    <div class="message user-message">
-                        <div class="message-content">
-                            苏轼的《水调歌头·明月几时有》创作于什么时候？
-                        </div>
-                    </div>
-
                     <div class="message assistant-message">
-                        <img src="{% static 'images/sushi-avatar.jpg' %}" alt="苏轼问答助手" class="avatar">
-                        <div class="message-content">
-                            苏轼的《水调歌头·明月几时有》创作于宋神宗熙宁九年（1076年）的中秋夜。<br><br>
-                            当时苏轼正在密州（今山东诸城）任知州，因与弟弟苏辙（子由）久别重逢未果，有感而发创作了这首词。词中"但愿人长久，千里共婵娟"一句，既表达了对亲人的思念，也体现了他旷达的人生态度。<br><br>
-                            这首词是中秋词中的千古绝唱，清代词评家胡仔在《苕溪渔隐丛话》中评价其"中秋词，自东坡《水调歌头》一出，余词尽废"。
+                        <div class="message-wrapper">
+                            <img src="{% static 'images/sushi-avatar.jpg' %}" alt="苏轼问答助手" class="avatar">
+                            <div class="message-content">
+                                您好！我是苏轼诗词智能问答助手，请问有什么关于苏轼的问题可以帮您解答？
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 输入区域 -->
+                <!-- 问答输入框 -->
                 <div class="input-area">
                     <form class="input-form">
                         <textarea class="question-input" placeholder="请输入您关于苏轼的问题..."></textarea>
@@ -419,94 +83,261 @@
                     </form>
                 </div>
             </div>
-
-            <!-- 移动端历史记录切换按钮 -->
-            <button class="toggle-history">
-                <i class="fa fa-history"></i>
-            </button>
         </div>
     </div>
+{% endblock %}
 
-    <!-- 页脚 -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <p>宋词雅韵 © 2025 智能问答系统 | 专注于苏轼词作的智能解析</p>
-            </div>
-        </div>
-    </footer>
 
-    <!-- 引入Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}
+    <!-- Markdown解析和代码高亮库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+
+    <!-- 登录状态配置 -->
     <script>
-        // 移动端历史记录切换
-        document.querySelector('.toggle-history').addEventListener('click', function() {
-            document.querySelector('.history-sidebar').classList.toggle('show');
-        });
+        const isLoggedIn = {% if user.is_authenticated %}true{% else %}false{% endif %};
+        const loginUrl = "{% url 'accounts:user_login' %}?next={{ request.path }}";
 
-        // 历史记录点击事件
+        // 配置Markdown解析器
+        marked.setOptions({
+            highlight: function (code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, {language: lang}).value;
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true
+        });
+    </script>
+
+    <!-- jQuery引入 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // 格式化时间
+        function formatDisplayTime(timeStr) {
+            const now = new Date();
+            const msgTime = new Date(timeStr);
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            if (msgTime >= today) {
+                return `今天 ${msgTime.getHours().toString().padStart(2, '0')}:${msgTime.getMinutes().toString().padStart(2, '0')}`;
+            } else if (msgTime >= yesterday) {
+                return `昨天 ${msgTime.getHours().toString().padStart(2, '0')}:${msgTime.getMinutes().toString().padStart(2, '0')}`;
+            } else {
+                return `${msgTime.getFullYear()}-${(msgTime.getMonth() + 1).toString().padStart(2, '0')}-${msgTime.getDate().toString().padStart(2, '0')} ${msgTime.getHours().toString().padStart(2, '0')}:${msgTime.getMinutes().toString().padStart(2, '0')}`;
+            }
+        }
+
+        // 历史会话点击事件：加载并渲染对话详情
         document.querySelectorAll('.history-item').forEach(item => {
-            item.addEventListener('click', function() {
-                // 移除其他项的active类
+            item.addEventListener('click', function () {
+                // 切换活跃状态
                 document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
-                // 给当前项添加active类
                 this.classList.add('active');
 
-                // 移动端点击后隐藏侧边栏
-                if (window.innerWidth <= 768) {
-                    document.querySelector('.history-sidebar').classList.remove('show');
-                }
+                // 获取对话ID
+                const dialogueId = this.getAttribute('data-id');
+                if (!dialogueId) return;
 
-                // 这里可以添加加载对应历史对话的逻辑（目前仅做界面演示）
+                // 请求对话详情
+                $.ajax({
+                    url: "{% url 'sushi_qa:dialogue_detail' %}",
+                    type: "GET",
+                    data: {"dialogue_id": dialogueId},
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.error) {
+                            alert(data.error);
+                            return;
+                        }
+
+                        // 渲染对话区
+                        const $chatContent = $('.chat-content');
+                        const $systemPrompt = $chatContent.find('.system-prompt').clone();
+                        $chatContent.empty().append($systemPrompt);
+
+                        // 渲染用户问题
+                        const userMessage = `
+                        <div class="message user-message history-target-question">
+                            <div class="message-wrapper">
+                                <div class="message-content">${data.question}</div>
+                            </div>
+                        </div>
+                    `;
+                        $chatContent.append(userMessage);
+
+                        // 渲染助手答案
+                        const formattedAnswer = marked.parse(data.answer);
+                        const assistantMessage = `
+                        <div class="message assistant-message">
+                            <div class="message-wrapper">
+                                <img src="{% static 'images/sushi-avatar.jpg' %}" class="avatar">
+                                <div class="message-content">${formattedAnswer}</div>
+                            </div>
+                        </div>
+                    `;
+                        $chatContent.append(assistantMessage);
+
+                        // 滚动到用户问题
+                        const $targetQuestion = $chatContent.find('.history-target-question');
+                        if ($targetQuestion.length) {
+                            const scrollTop = $targetQuestion.offset().top - $chatContent.offset().top;
+                            $chatContent.scrollTop(scrollTop);
+                        }
+                    },
+                    error: function () {
+                        alert("加载历史对话失败，请重试");
+                    }
+                });
             });
         });
 
-        // 发送按钮点击事件
-        document.querySelector('.send-btn').addEventListener('click', function() {
-            const input = document.querySelector('.question-input');
-            const question = input.value.trim();
+        // 发送消息功能
+        const $sendBtn = $('.send-btn');
+        const $input = $('.question-input');
+        const $chatContent = $('.chat-content');
 
-            if (question) {
-                // 模拟添加用户问题（实际项目中需通过AJAX请求后端）
-                const userMessage = document.createElement('div');
-                userMessage.className = 'message user-message';
-                userMessage.innerHTML = `<div class="message-content">${question}</div>`;
-                document.querySelector('.chat-content').appendChild(userMessage);
+        function sendMessage() {
+            const question = $input.val().trim();
+            if (!question) return;
 
-                // 模拟添加回答（实际项目中由后端返回）
-                const assistantMessage = document.createElement('div');
-                assistantMessage.className = 'message assistant-message';
-                assistantMessage.innerHTML = `
-                    <img src="{% static 'images/sushi-avatar.jpg' %}" alt="苏轼问答助手" class="avatar">
-                    <div class="message-content">正在为您解析关于苏轼的问题："${question}"...<br><br>（实际应用中此处会显示AI生成的回答）</div>
-                `;
-                document.querySelector('.chat-content').appendChild(assistantMessage);
-
-                // 清空输入框并滚动到底部
-                input.value = '';
-                document.querySelector('.chat-content').scrollTop = document.querySelector('.chat-content').scrollHeight;
-
-                // 模拟添加到历史记录
-                const historyList = document.querySelector('.history-list');
-                const newHistory = document.createElement('li');
-                newHistory.className = 'history-item active';
-                newHistory.innerHTML = `
-                    <div class="history-question">${question}</div>
-                    <div class="history-time">刚刚</div>
-                `;
-                // 移除其他active类并添加新记录到顶部
-                document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
-                historyList.insertBefore(newHistory, historyList.firstChild);
+            // 未登录验证
+            if (!isLoggedIn) {
+                if (confirm("请先登录再提问，点击「确定」前往登录页～")) {
+                    window.location.href = loginUrl;
+                }
+                return;
             }
-        });
 
-        // 按Enter发送消息（Shift+Enter换行）
-        document.querySelector('.question-input').addEventListener('keydown', function(e) {
+            // 禁用按钮并显示加载状态
+            $sendBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+            // 添加用户消息
+            const userMessage = `
+            <div class="message user-message">
+                <div class="message-wrapper">
+                    <div class="message-content">${question}</div>
+                </div>
+            </div>
+        `;
+            $chatContent.append(userMessage);
+
+            // 添加加载提示
+            const loadingMessage = `
+            <div class="message assistant-message" id="loading">
+                <div class="message-wrapper">
+                    <img src="{% static 'images/sushi-avatar.jpg' %}" class="avatar">
+                    <div class="message-content">
+                        <div class="loading-indicator">
+                            <div class="loading-dot"></div>
+                            <div class="loading-dot"></div>
+                            <div class="loading-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+            $chatContent.append(loadingMessage);
+            $chatContent.scrollTop($chatContent[0].scrollHeight);
+
+            // 发送请求
+            $.ajax({
+                url: "/sushi-qa/query/",
+                type: "POST",
+                data: {
+                    "question": question,
+                    "csrfmiddlewaretoken": "{{ csrf_token }}"
+                },
+                dataType: "json",
+                success: function (data) {
+                    $('#loading').remove();
+                    let answerHtml;
+                    if (data.error) {
+                        answerHtml = `
+                        <div class="message assistant-message">
+                            <div class="message-wrapper">
+                                <img src="{% static 'images/sushi-avatar.jpg' %}" class="avatar">
+                                <div class="message-content">${data.error}</div>
+                            </div>
+                        </div>
+                    `;
+                    } else {
+                        // 解析Markdown答案
+                        const formattedAnswer = marked.parse(data.answer);
+                        answerHtml = `
+                        <div class="message assistant-message">
+                            <div class="message-wrapper">
+                                <img src="{% static 'images/sushi-avatar.jpg' %}" class="avatar">
+                                <div class="message-content">${formattedAnswer}</div>
+                            </div>
+                        </div>
+                    `;
+
+                        // 更新历史会话列表
+                        const now = new Date();
+                        const timeStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+                        const newHistory = `
+                        <li class="history-item active" data-id="${data.dialogue_id}" data-time="${timeStr}">
+                            <div class="history-question">${question}</div>
+                            <div class="history-time">${formatDisplayTime(timeStr)}</div>
+                        </li>
+                    `;
+                        $('.history-item').removeClass('active');
+                        $('.history-list').prepend(newHistory);
+                        $('.history-list li:first').click(function () {
+                            $(this).addClass('active').siblings().removeClass('active');
+                        });
+                    }
+                    $chatContent.append(answerHtml);
+                    $chatContent.scrollTop($chatContent[0].scrollHeight);
+                },
+                error: function () {
+                    $('#loading').remove();
+                    const errorHtml = `
+                    <div class="message assistant-message">
+                        <div class="message-wrapper">
+                            <img src="{% static 'images/sushi-avatar.jpg' %}" class="avatar">
+                            <div class="message-content">网络异常，请稍后再试</div>
+                        </div>
+                    </div>
+                `;
+                    $chatContent.append(errorHtml);
+                    $chatContent.scrollTop($chatContent[0].scrollHeight);
+                },
+                complete: function () {
+                    $sendBtn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i>');
+                    $input.val('');
+                    $input.css('height', '52px');
+                }
+            });
+        }
+
+        // 绑定事件
+        $sendBtn.click(sendMessage);
+        $input.keydown(function (e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                document.querySelector('.send-btn').click();
+                sendMessage();
+            }
+        });
+        $input.on('input', function () {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // 初始化时格式化所有历史会话时间
+        document.querySelectorAll('.history-item').forEach(item => {
+            const timeStr = item.getAttribute('data-time') || item.querySelector('.history-time').textContent;
+            if (timeStr) {
+                item.querySelector('.history-time').textContent = formatDisplayTime(timeStr);
             }
         });
     </script>
-</body>
-</html>
+{% endblock %}

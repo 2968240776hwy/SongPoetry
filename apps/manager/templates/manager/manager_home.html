@@ -1,0 +1,189 @@
+<!-- manage/templates/manage/manage_home.html -->
+{% extends 'base.html' %}
+
+{% block title %}管理员后台 - 宋词雅韵{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    {% if messages %}
+    <div class="row mb-4">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message|safe }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 管理员功能模块 -->
+    <div class="container mt-5">
+        <h2 class="mb-4 text-center">欢迎回来，{{ admin_name }} 管理员</h2>
+        <p class="text-center mb-5">这里是管理员操作中心，可以进行用户管理、词作、词人及对话等管理操作。</p>
+
+        <div class="row text-center">
+            <!-- 第一行：原有四个模块 -->
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <i class="fa fa-users fa-3x mb-3 text-primary"></i>
+                        <h5 class="card-title">用户管理</h5>
+                        <p class="card-text">管理系统用户的基本信息</p>
+                        <a href="{% url 'manager:user_list' %}" class="btn btn-outline-primary">进入</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <i class="fa fa-file-text fa-3x mb-3 text-success"></i>
+                        <h5 class="card-title">词作管理</h5>
+                        <p class="card-text">管理平台中的宋词内容</p>
+                        <a href="{% url 'manager:poem_list' %}" class="btn btn-outline-success">进入</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <i class="fa fa-user-circle fa-3x mb-3 text-warning"></i>
+                        <h5 class="card-title">词人管理</h5>
+                        <p class="card-text">管理宋代词人的资料</p>
+                        <a href="{% url 'manager:author_list' %}" class="btn btn-outline-warning">进入</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <i class="fa fa-comments fa-3x mb-3 text-info"></i>
+                        <h5 class="card-title">对话管理</h5>
+                        <p class="card-text">查看用户智能问答记录</p>
+                        <a href="{% url 'manager:dialogue_list' %}" class="btn btn-outline-info">进入</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 第二行：文件夹上传 + 功能开发中（居中排列，和第一行风格一致） -->
+            <div class="col-md-3 mb-4 offset-md-3"> <!-- 偏移2列，实现居中 -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <!-- 新增：文件夹图标，和其他模块风格一致 -->
+                        <i class="fa fa-folder-open fa-3x mb-3 text-danger"></i>
+                        <h5 class="card-title">知识库维护</h5>
+                        <p class="card-text">总大小上限：10GB</p>
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#folderUploadModal">
+                            上传
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-6"> <!-- 和上传模块相邻，保持间距一致 -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <i class="fa fa-cog fa-3x mb-3 text-secondary"></i>
+                        <h5 class="card-title">功能开发中</h5>
+                        <p class="card-text">该模块正在规划开发中</p>
+                        <button type="button" class="btn btn-outline-secondary" disabled>暂未开放</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 文件夹上传弹窗 -->
+<div class="modal fade" id="folderUploadModal" tabindex="-1" aria-labelledby="folderUploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="folderUploadModalLabel">文件夹上传</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="folderUploadForm" enctype="multipart/form-data" action="{% url 'manager:folder_upload' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" id="fileRelativePaths" name="file_relative_paths" value="">
+
+                    <div class="mb-3">
+                        <label for="folderInput" class="form-label">选择文件夹</label>
+                        <input type="file" class="form-control" id="folderInput" name="folder_files" webkitdirectory directory multiple>
+                        <div class="form-text">支持选择整个文件夹，会自动上传文件夹内所有文件</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="uploadDesc" class="form-label">上传说明（可选）</label>
+                        <textarea class="form-control" id="uploadDesc" name="upload_desc" rows="3"></textarea>
+                    </div>
+                    <div id="fileList" class="mt-3">
+                        <h6>待上传文件列表：</h6>
+                        <ul id="fileListUl" class="list-group"></ul>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="submitUpload">确认上传</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JS处理文件列表展示和表单提交 -->
+<script>
+// 存储所有文件的相对路径
+let filePaths = [];
+
+document.getElementById('folderInput').addEventListener('change', function(e) {
+    const files = e.target.files;
+    const fileListUl = document.getElementById('fileListUl');
+    fileListUl.innerHTML = '';
+    filePaths = [];
+
+    if (files.length === 0) {
+        fileListUl.innerHTML = '<li class="list-group-item">未选择任何文件</li>';
+        return;
+    }
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const relativePath = file.webkitRelativePath;
+        filePaths.push(relativePath);
+
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.textContent = relativePath + ' (' + formatFileSize(file.size) + ')';
+        fileListUl.appendChild(li);
+    }
+
+    document.getElementById('fileRelativePaths').value = JSON.stringify(filePaths);
+});
+
+// 格式化文件大小
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i];
+}
+
+document.getElementById('submitUpload').addEventListener('click', function() {
+    const form = document.getElementById('folderUploadForm');
+    const files = document.getElementById('folderInput').files;
+
+    if (files.length === 0) {
+        alert('请先选择要上传的文件夹！');
+        return;
+    }
+
+    if (filePaths.length === 0) {
+        alert('未获取到文件路径，请重新选择文件夹！');
+        return;
+    }
+
+    form.submit();
+});
+</script>
+{% endblock %}

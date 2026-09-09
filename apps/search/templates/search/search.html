@@ -1,0 +1,1382 @@
+{% extends 'base.html' %}
+
+{% block title %}宋词雅韵 - 古典文学智能服务平台{% endblock %}
+
+{% block extra_css %}
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+
+            .scroll-decoration {
+                position: relative;
+            }
+
+            .scroll-decoration::after {
+                content: "";
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 30px;
+                background: linear-gradient(to top, rgba(255, 255, 255, 0.9), transparent);
+            }
+
+            .poem-line {
+                white-space: pre-wrap;
+                line-height: 1.8;
+            }
+
+            .graph-btn-active {
+                @apply bg-blue-600 text-white shadow-sm;
+            }
+
+            .result-card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-blue-100;
+            }
+
+            .history-item {
+                @apply px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer text-sm flex justify-between items-center;
+            }
+
+            .stat-card {
+                @apply bg-white rounded-lg border border-gray-100 p-3 shadow-sm text-center;
+            }
+        }
+
+
+        body {
+            padding-top: 80px;
+            overflow-x: hidden; /* 防止水平滚动 */
+        }
+
+        /* 确保容器正确显示 */
+        .container {
+            max-width: 100% !important;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+
+        .page-header {
+            margin-top: 0 !important;
+            width: 100%;
+            max-width: 100%;
+        }
+
+
+        main {
+            width: 100%;
+            max-width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+{% endblock %}
+
+
+{% block content %}
+    <!-- 页面头部：调整margin-top适配导航栏 -->
+    <header class="page-header bg-white shadow-sm border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <h1 class="text-[clamp(1.5rem,3vw,2.2rem)] font-bold text-gray-800 text-center tracking-tight">
+                宋词知识检索
+            </h1>
+            <p class="text-center text-gray-500 mt-2 text-sm sm:text-base">
+                探索古典诗词中的人物、意象、情感与历史
+            </p>
+            <div id="connection-status"
+                 class="mt-4 inline-flex items-center px-4 py-2 rounded-full text-sm mx-auto block">
+                <i class="fa fa-circle-o-notch fa-spin mr-2 text-gray-400"></i>
+                <span>检查连接中...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <!-- 搜索区域 -->
+        <section class="mb-10 max-w-3xl mx-auto">
+            <div class="bg-white/90 backdrop-blur-sm p-5 sm:p-6 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex flex-col md:flex-row gap-3 sm:gap-4 mb-5">
+                    <div class="flex-1 relative">
+                        <input
+                                type="text"
+                                id="search-input"
+                                placeholder="人物检索示例：苏轼、李清照、辛弃疾、柳永"
+                                class="w-full py-3 px-4 pr-12 rounded-lg border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-sm sm:text-base"
+                                autocomplete="off"
+                        >
+                        <button id="search-btn"
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-500 hover:text-blue-600 transition-colors">
+                            <i class="fa fa-search text-lg sm:text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="w-full md:w-[140px] sm:w-[120px]">
+                        <select id="search-type"
+                                class="w-full py-3 px-3 sm:px-4 rounded-lg border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white text-sm sm:text-base">
+                            <option value="person">人物</option>
+                            <option value="work">作品</option>
+                            <option value="time">时间</option>
+                            <option value="location">地点</option>
+                            <option value="event">事件</option>
+                            <option value="emotion">情感</option>
+                            <option value="allusion">典故</option>
+                            <option value="image">意象</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 搜索历史区域 -->
+                <div id="search-history-container" class="mb-4 hidden">
+                    <p class="text-xs text-gray-500 mb-2 flex items-center">
+                        <i class="fa fa-history mr-1.5"></i> 搜索历史
+                        <button id="clear-history" class="ml-2 text-blue-500 hover:text-blue-600">清除</button>
+                    </p>
+                    <div id="search-history" class="max-h-32 overflow-y-auto pr-1 space-y-1">
+                        <!-- 搜索历史将动态添加 -->
+                    </div>
+                </div>
+
+                <p class="text-xs text-gray-400 text-center">
+                    选择检索类型后输入关键词，支持模糊匹配
+                </p>
+            </div>
+        </section>
+
+        <!-- 检索结果区域 -->
+        <section id="results-section" class="hidden mb-8">
+            <!-- 统计信息卡片 -->
+            <div id="stats-container" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <!-- 统计卡片将动态生成 -->
+            </div>
+
+            <div class="bg-white/90 backdrop-blur-sm p-5 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+                    <h2 class="text-lg sm:text-xl font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fa fa-search text-blue-500"></i>
+                        检索结果：<span id="search-category" class="text-blue-600">人物类</span> - <span id="search-term"
+                                                                                                        class="text-gray-700">"苏轼"</span>（共
+                        <span id="results-count" class="text-blue-600">0</span> 条）
+                    </h2>
+
+                    <div class="mt-3 sm:mt-0 flex items-center gap-2">
+                        <label for="sort-select" class="text-xs text-gray-500">排序：</label>
+                        <select id="sort-select"
+                                class="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:border-blue-300">
+                            <option value="relevance">相关度</option>
+                            <option value="name_asc">名称（升序）</option>
+                            <option value="name_desc">名称（降序）</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="no-results" class="hidden text-center py-10 sm:py-12 text-gray-400">
+                    <i class="fa fa-search-minus text-3xl mb-3 opacity-70"></i>
+                    <p class="text-sm sm:text-base">未找到相关结果，可尝试其他关键词或类型</p>
+                </div>
+
+                <div id="results-container" class="grid grid-cols-1 gap-4 sm:gap-5">
+                    <!-- 结果会动态渲染到这里 -->
+                </div>
+
+                <div id="graph-toggle-container" class="hidden mt-6 text-center">
+                    <button id="graph-toggle-btn"
+                            class="px-5 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium flex items-center justify-center mx-auto gap-2 text-sm sm:text-base">
+                        <i class="fa fa-sitemap"></i>
+                        <span>显示知识图谱</span>
+                    </button>
+                    <p class="text-xs text-gray-400 mt-2">展示检索结果的关联关系（人物/作品/意象等）</p>
+                </div>
+            </div>
+
+            <!-- 知识图谱区域 -->
+            <div id="relation-section"
+                 class="hidden bg-white/90 backdrop-blur-sm p-5 sm:p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                    <h2 class="text-lg sm:text-xl font-semibold text-gray-800 flex items-center gap-2">
+                        <i class="fa fa-sitemap text-blue-500"></i>宋词知识图谱
+                    </h2>
+                    <div class="flex gap-2 sm:gap-3">
+                        <button id="graph-zoom-in"
+                                class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors text-xs sm:text-sm">
+                            <i class="fa fa-search-plus mr-1"></i>放大
+                        </button>
+                        <button id="graph-zoom-out"
+                                class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors text-xs sm:text-sm">
+                            <i class="fa fa-search-minus mr-1"></i>缩小
+                        </button>
+                        <button id="graph-reset"
+                                class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors text-xs sm:text-sm">
+                            <i class="fa fa-refresh mr-1"></i>重置
+                        </button>
+                    </div>
+                </div>
+
+                <div id="relation-graph"
+                     class="h-[400px] sm:h-[500px] border border-gray-200 rounded-lg overflow-hidden bg-gray-50/50"></div>
+
+                <div class="flex flex-wrap gap-3 sm:gap-4 mt-4 text-xs sm:text-sm text-gray-500 justify-center">
+                    <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-blue-500 mr-1.5"></span>人物
+                    </div>
+                    <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-green-500 mr-1.5"></span>作品
+                    </div>
+                    <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-yellow-500 mr-1.5"></span>时间
+                    </div>
+                    <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-red-500 mr-1.5"></span>地点
+                    </div>
+                    <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-purple-500 mr-1.5"></span>情感
+                    </div>
+                    <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-pink-500 mr-1.5"></span>意象
+                    </div>
+                    <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500 mr-1.5"></span>典故
+                    </div>
+                    <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-teal-500 mr-1.5"></span>事件
+                    </div>
+                </div>
+
+                <div id="graph-empty" class="hidden text-center py-8 sm:py-10 text-gray-400">
+                    <i class="fa fa-sitemap text-2xl mb-2 opacity-70"></i>
+                    <p class="text-xs sm:text-sm">当前检索结果暂无关联图谱数据</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 详情模态框 -->
+    <div id="detail-modal"
+         class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[85vh] overflow-y-auto p-5 sm:p-6 md:p-8 transform transition-transform duration-300 scale-95">
+            <div class="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
+                <h3 id="modal-title" class="text-xl sm:text-2xl font-semibold text-gray-800">实体详情</h3>
+                <button id="close-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa fa-times text-lg sm:text-xl"></i>
+                </button>
+            </div>
+            <div class="space-y-3 sm:space-y-4 text-sm sm:text-base">
+                <!-- 动态内容区域 -->
+                <div id="modal-content-container">
+                    <!-- 内容将动态填充 -->
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block extra_js %}
+    <!-- 基础依赖库 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/neo4j-driver@5.15.0/lib/browser/neo4j-web.min.js"></script>
+    <!-- 知识图谱核心依赖 -->
+    <script src="https://visjs.github.io/vis-network/standalone/umd/vis-network.min.js"></script>
+    <link href="https://visjs.github.io/vis-network/styles/vis-network.min.css" rel="stylesheet">
+    <script>
+        // DOM元素缓存
+        const dom = {
+            connectionStatus: document.getElementById('connection-status'),
+            searchInput: document.getElementById('search-input'),
+            searchType: document.getElementById('search-type'),
+            searchBtn: document.getElementById('search-btn'),
+            resultsSection: document.getElementById('results-section'),
+            resultsContainer: document.getElementById('results-container'),
+            resultsCount: document.getElementById('results-count'),
+            searchCategory: document.getElementById('search-category'),
+            searchTerm: document.getElementById('search-term'),
+            noResults: document.getElementById('no-results'),
+            relationSection: document.getElementById('relation-section'),
+            relationGraph: document.getElementById('relation-graph'),
+            graphToggleContainer: document.getElementById('graph-toggle-container'),
+            graphToggleBtn: document.getElementById('graph-toggle-btn'),
+            graphZoomIn: document.getElementById('graph-zoom-in'),
+            graphZoomOut: document.getElementById('graph-zoom-out'),
+            graphReset: document.getElementById('graph-reset'),
+            graphEmpty: document.getElementById('graph-empty'),
+            detailModal: document.getElementById('detail-modal'),
+            closeModal: document.getElementById('close-modal'),
+            modalTitle: document.getElementById('modal-title'),
+            modalContentContainer: document.getElementById('modal-content-container'),
+            searchHistoryContainer: document.getElementById('search-history-container'),
+            searchHistory: document.getElementById('search-history'),
+            clearHistory: document.getElementById('clear-history'),
+            statsContainer: document.getElementById('stats-container'),
+            sortSelect: document.getElementById('sort-select')
+        };
+
+        // 全局变量
+        let network = null;
+        let frontEndGraphData = null;
+        let searchHistory = new Map(); // 缓存搜索结果，key为"type-query"
+        let userSearchHistory = JSON.parse(localStorage.getItem('songciSearchHistory') || '[]'); // 用户搜索历史
+
+        // 页面加载初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            checkBackendStatus();
+            bindBaseEvents();
+            bindGraphControls();
+            loadSearchHistory();
+            // 搜索框自动聚焦
+            setTimeout(() => dom.searchInput.focus(), 500);
+
+            // 新增：处理URL参数
+            const params = new URLSearchParams(window.location.search);
+            const type = params.get('type');
+            const query = params.get('query');
+
+            // 如果有参数，自动填充并执行搜索
+            if (type && query) {
+                dom.searchType.value = type;
+                dom.searchInput.value = query;
+                // 触发搜索
+                setTimeout(() => handleSearch(), 500);
+            } else {
+                // 没有参数时才自动聚焦
+                setTimeout(() => dom.searchInput.focus(), 500);
+            }
+        });
+
+        // 绑定基础交互事件
+        function bindBaseEvents() {
+            // 提示词映射
+            const placeholderMap = {
+                person: "人物检索示例：苏轼、李清照、辛弃疾、柳永、陆游",
+                work: "作品检索示例：水调歌头、声声慢、青玉案·元夕、雨霖铃",
+                time: "时间检索示例：中秋、熙宁九年、绍兴年间、暮春、元丰",
+                location: "地点检索示例：赤壁、临安、建康、江南、钱塘",
+                event: "事件检索示例：乌台诗案、靖康之变、上元灯会、西湖雅集",
+                emotion: "情感检索示例：思乡、离愁、豁达、孤寂、壮志未酬",
+                allusion: "典故检索示例：赤壁怀古、庄生晓梦、青鸟传书、鲈鱼堪脍",
+                image: "意象检索示例：明月、杨柳、梧桐、鸿雁、梅花、流水"
+            };
+
+            // 检索类型变化事件
+            dom.searchType.addEventListener('change', function () {
+                const currentType = this.value;
+                dom.searchInput.placeholder = placeholderMap[currentType];
+                dom.searchInput.value = '';
+                dom.searchInput.focus();
+                showSearchHistory();
+            });
+
+            // 回车键搜索
+            dom.searchInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter' && dom.searchInput.value.trim()) {
+                    handleSearch();
+                }
+            });
+
+            // 搜索按钮点击
+            dom.searchBtn.addEventListener('click', handleSearch);
+
+            // 详情模态框关闭
+            dom.closeModal.addEventListener('click', closeDetailModal);
+            dom.detailModal.addEventListener('click', e => {
+                if (e.target === dom.detailModal) closeDetailModal();
+            });
+
+            // 图谱显示/隐藏切换
+            dom.graphToggleBtn.addEventListener('click', toggleGraphDisplay);
+
+            // 结果容器事件委托
+            dom.resultsContainer.addEventListener('click', e => {
+                if (e.target.closest('.view-detail')) {
+                    const btn = e.target.closest('.view-detail');
+                    const entityData = JSON.parse(btn.dataset.entity);
+                    const entityType = btn.dataset.type;
+                    showDetailModal(entityData, entityType);
+                }
+            });
+
+            // 清除搜索历史
+            dom.clearHistory.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm('确定要清除所有搜索历史吗？')) {
+                    localStorage.removeItem('songciSearchHistory');
+                    userSearchHistory = [];
+                    dom.searchHistory.innerHTML = '';
+                    dom.searchHistoryContainer.classList.add('hidden');
+                }
+            });
+
+            // 搜索历史点击事件委托
+            dom.searchHistory.addEventListener('click', (e) => {
+                const item = e.target.closest('.history-item');
+                if (item) {
+                    const {type, query} = item.dataset;
+                    dom.searchType.value = type;
+                    dom.searchInput.value = query;
+                    dom.searchInput.focus();
+                    // 触发提示词更新
+                    dom.searchType.dispatchEvent(new Event('change'));
+                }
+            });
+
+            // 排序选择事件
+            dom.sortSelect.addEventListener('change', function () {
+                const query = dom.searchTerm.textContent.replace(/"/g, '');
+                const type = dom.searchType.value;
+                const cacheKey = `${type}-${query}`;
+
+                if (searchHistory.has(cacheKey)) {
+                    const cachedData = searchHistory.get(cacheKey);
+                    renderSearchResults(cachedData, query, type);
+                }
+            });
+        }
+
+        // 加载搜索历史
+        function loadSearchHistory() {
+            if (userSearchHistory.length > 0) {
+                renderSearchHistory();
+                showSearchHistory();
+            }
+        }
+
+        // 渲染搜索历史
+        function renderSearchHistory() {
+            dom.searchHistory.innerHTML = '';
+            // 只显示最近10条
+            const recentHistory = userSearchHistory.slice(-10).reverse();
+
+            recentHistory.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.dataset.type = item.type;
+                historyItem.dataset.query = item.query;
+
+                const typeName = getTypeName(item.type);
+                historyItem.innerHTML = `
+                <span><strong>${typeName}</strong>：${item.query}</span>
+                <i class="fa fa-angle-right text-gray-300"></i>
+            `;
+
+                dom.searchHistory.appendChild(historyItem);
+            });
+        }
+
+        // 显示搜索历史
+        function showSearchHistory() {
+            const currentType = dom.searchType.value;
+            const filteredHistory = userSearchHistory.filter(item => item.type === currentType);
+
+            if (filteredHistory.length > 0) {
+                dom.searchHistoryContainer.classList.remove('hidden');
+            } else {
+                dom.searchHistoryContainer.classList.add('hidden');
+            }
+        }
+
+        // 添加搜索记录
+        function addSearchHistory(type, query) {
+            // 去重
+            userSearchHistory = userSearchHistory.filter(item => !(item.type === type && item.query === query));
+            // 添加新记录
+            userSearchHistory.push({type, query, timestamp: new Date().getTime()});
+            // 保存到本地存储
+            localStorage.setItem('songciSearchHistory', JSON.stringify(userSearchHistory));
+            // 更新显示
+            renderSearchHistory();
+            showSearchHistory();
+        }
+
+        // 搜索处理函数
+        function handleSearch() {
+            const query = dom.searchInput.value.trim();
+            const type = dom.searchType.value;
+            if (!query) {
+                dom.searchInput.classList.add('border-red-300');
+                setTimeout(() => dom.searchInput.classList.remove('border-red-300'), 800);
+                alert(`请输入${getTypeName(type)}关键词（可参考输入框示例）`);
+                return;
+            }
+
+            // 添加到搜索历史
+            addSearchHistory(type, query);
+
+            // 检查缓存
+            const cacheKey = `${type}-${query}`;
+            if (searchHistory.has(cacheKey)) {
+                const cachedData = searchHistory.get(cacheKey);
+                renderSearchResults(cachedData, query, type);
+                return;
+            }
+
+            // 加载状态
+            dom.searchBtn.innerHTML = '<i class="fa fa-circle-o-notch fa-spin text-lg sm:text-xl"></i>';
+            fetchSearchData(query, type)
+                .then(data => {
+                    searchHistory.set(cacheKey, data); // 存入缓存
+                    // 缓存限制（最多保留10条记录）
+                    if (searchHistory.size > 10) {
+                        const oldestKey = Array.from(searchHistory.keys()).shift();
+                        searchHistory.delete(oldestKey);
+                    }
+                    renderSearchResults(data, query, type);
+                })
+                .catch(error => {
+                    console.error('检索出错：', error);
+                    dom.resultsContainer.innerHTML = `
+                    <div class="col-span-full text-center py-8 sm:py-10">
+                        <i class="fa fa-exclamation-circle text-2xl text-red-400 mb-3"></i>
+                        <p class="text-sm text-gray-500">检索出错，请检查后端服务后重试</p>
+                    </div>
+                `;
+                })
+                .finally(() => {
+                    dom.searchBtn.innerHTML = '<i class="fa fa-search text-lg sm:text-xl"></i>';
+                });
+        }
+
+        // 发起搜索请求
+        async function fetchSearchData(query, type) {
+            const response = await fetch('/search/results/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    query: query,
+                    type: type,
+                    page: 1,
+                    page_size: 5  // 修改为5条
+                })
+            });
+
+            if (!response.ok) throw new Error(`检索失败（状态码：${response.status}）`);
+            const data = await response.json();
+            return {
+                count: data.count || 0,
+                results: data.results || [],
+                success: data.success || true
+            };
+        }
+
+        // 渲染统计信息
+        function renderStatistics(totalCount, results, type) {
+            dom.statsContainer.innerHTML = '';
+
+            // 关键：从后端返回的related_entities中提取entity_type（已由标签解析）
+            const entityTypeSet = new Set(); // 用Set自动去重
+            let totalRelations = 0;
+
+            results.forEach(item => {
+                if (item.related_entities && item.related_entities.length > 0) {
+                    item.related_entities.forEach(rel => {
+                        // 直接使用后端返回的entity_type（来自标签解析）
+                        const relType = rel.entity.entity_type || '未知类型';
+                        // 过滤无效类型
+                        if (relType && relType.trim() !== '') {
+                            entityTypeSet.add(relType);
+                            totalRelations++;
+                        }
+                    });
+                }
+            });
+
+            // 关联类型数 = 去重后的类型数量
+            const relationTypeCount = entityTypeSet.size;
+
+            // 调试日志（验证类型是否正确提取）
+            console.log('关联实体类型列表：', Array.from(entityTypeSet));
+
+            // 生成统计卡片
+            const stats = [
+                {label: '总结果数', value: totalCount, icon: 'fa-list'},
+                {label: '关联实体数', value: totalRelations, icon: 'fa-link'},
+                {label: '关联类型数', value: relationTypeCount, icon: 'fa-sitemap'}
+            ];
+
+            stats.forEach(stat => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+            <i class="fa ${stat.icon} text-blue-500 mb-1"></i>
+            <p class="text-2xl font-bold text-gray-800">${stat.value}</p>
+            <p class="text-xs text-gray-500">${stat.label}</p>
+        `;
+                dom.statsContainer.appendChild(card);
+            });
+        }
+
+        // 渲染搜索结果（适配所有实体类型）
+        function renderSearchResults(data, query, type) {
+            // 更新结果标题
+            dom.resultsCount.textContent = data.count || 0;
+            dom.searchCategory.textContent = getTypeName(type);
+            dom.searchTerm.textContent = `"${query}"`;
+
+            // 显示结果区域
+            dom.resultsSection.classList.remove('hidden');
+            dom.noResults.classList.add('hidden');
+            dom.relationSection.classList.add('hidden');
+            if (network) network.destroy();
+
+            // 渲染统计信息，传入总数量
+            renderStatistics(data.count, data.results || [], type);
+
+            // 渲染结果列表
+            if (data.count > 0 && data.results) {
+                // 根据排序选项排序结果
+                let sortedResults = [...data.results];
+                const sortBy = dom.sortSelect.value;
+
+                switch (sortBy) {
+                    case 'name_asc':
+                        sortedResults.sort((a, b) => a.entity.name.localeCompare(b.entity.name));
+                        break;
+                    case 'name_desc':
+                        sortedResults.sort((a, b) => b.entity.name.localeCompare(a.entity.name));
+                        break;
+                    // 默认按相关度
+                    default:
+                        break;
+                }
+
+                dom.resultsContainer.innerHTML = '';
+                const fragment = document.createDocumentFragment();
+
+                sortedResults.forEach((item, index) => {
+                    // 解析实体数据
+                    const entity = item.entity || {};
+                    const doc = item.document || {};
+                    const entityType = item.entity_type || getTypeName(type);
+
+                    // 根据检索类型提取不同数据
+                    let displayData = {
+                        title: entity.name || doc.title || '未知实体',
+                        description: entity.description || '无描述信息',
+                        id: entity.id || doc.id || 'unknown',
+                        type: entityType,
+                        relatedEntities: item.related_entities || [],
+                        sourceInfo: item.sources || item.content || item.related_text || ''
+                    };
+
+                    // 类型特定数据补充
+                    switch (type) {
+                        case 'person':
+                            displayData.details = {
+                                性别: entity.person_gender || '未知',
+                                字号: entity.person_character || '无记录',
+                                别名: entity.person_nickname || '未知',
+                                生年: entity.person_birth || '未知',
+                                卒年: entity.person_dead || '未知',
+                                出生地点: entity.person_nativeplace || '未知',
+                                死亡地点: entity.person_deathplace || '未知',
+                            };
+                            break;
+                        case 'work':
+                            displayData.details = {
+                                内容: entity.work_content || '无记录',
+                                创作时间: entity.work_time || '未知',
+                                词牌名: entity.work_brand || '无记录'
+                            };
+                            break;
+                        case 'time':
+                            displayData.details = {
+                                时代: entity.date_era || '未知'
+                            };
+                            break;
+                        case 'location':
+                            displayData.details = {
+                                古名: entity.place_ancientname || '无记录',
+                                今名: entity.place_nowname || '无记录'
+                            };
+                            break;
+                        case 'event':
+                            displayData.details = {
+                                发生时间: entity.event_time || '未知',
+                                发生地点: entity.event_place || '未知'
+                            };
+                            break;
+                        case 'emotion':
+                            displayData.details = {
+                                情感强度: entity.emotion_strength || '未标注'
+                            };
+                            break;
+                        case 'allusion':
+                            displayData.details = {
+                                出处: entity.diangu_source || '无记录'
+                            };
+                            break;
+                        case 'image':
+                            displayData.details = {
+                                象征意义: entity.yixiang_means || '无解释'
+                            };
+                            break;
+                    }
+
+                    // 内容截断处理
+                    const displayContent = displayData.description.length > 220
+                        ? displayData.description.substring(0, 220).replace(/\n/g, '<br>') + '...'
+                        : displayData.description.replace(/\n/g, '<br>');
+
+                    // 创建结果卡片
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg border border-gray-100 shadow-sm p-4 sm:p-5 result-card-hover';
+
+                    // 构建卡片内容
+                    let cardContent = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-base sm:text-lg font-semibold text-blue-600">${displayData.title}</h3>
+                        <span class="text-xs text-gray-400">${index + 1}</span>
+                    </div>
+                    <div class="scroll-decoration pl-2 sm:pl-3 text-gray-700 text-sm leading-relaxed h-24 sm:h-28 overflow-y-auto mb-3 sm:mb-4">
+                        ${displayContent}
+                    </div>
+                `;
+
+                    // 添加关联信息
+                    if (displayData.relatedEntities.length > 0) {
+                        const relatedTypes = [...new Set(displayData.relatedEntities.map(e => e.entity_type))];
+                        cardContent += `
+                        <div class="text-xs text-gray-500 mb-3">
+                            <span class="font-medium">关联实体：</span>
+                            ${relatedTypes.join('、')}（共${displayData.relatedEntities.length}个，最多显示10个）
+                        </div>
+                    `;
+                    }
+
+                    // 添加查看详情按钮
+                    cardContent += `
+                    <button class="view-detail w-full py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors text-sm flex items-center justify-center gap-1"
+                            data-entity='${JSON.stringify(displayData)}'
+                            data-type='${displayData.type}'>
+                        <i class="fa fa-info-circle"></i> 查看详细信息
+                    </button>
+                `;
+
+                    card.innerHTML = cardContent;
+                    fragment.appendChild(card);
+                });
+
+                dom.resultsContainer.appendChild(fragment);
+                // 提取图谱数据
+                frontEndGraphData = extractGraphDataFromResults(data.results, type);
+                dom.graphToggleContainer.classList.remove('hidden');
+            } else {
+                dom.resultsContainer.innerHTML = '';
+                dom.noResults.classList.remove('hidden');
+                dom.statsContainer.innerHTML = '';
+            }
+        }
+
+        // 检查后端连接状态
+        async function checkBackendStatus() {
+            try {
+                const response = await fetch('/search/');
+                dom.connectionStatus.innerHTML = '<i class="fa fa-check-circle mr-2 text-green-500"></i><span>已连接检索服务</span>';
+                dom.connectionStatus.className = 'inline-flex items-center px-4 py-2 rounded-full text-sm mx-auto block text-green-600 bg-green-50';
+            } catch (error) {
+                dom.connectionStatus.innerHTML = '<i class="fa fa-exclamation-circle mr-2 text-red-500"></i><span>后端服务未启动</span>';
+                dom.connectionStatus.className = 'inline-flex items-center px-4 py-2 rounded-full text-sm mx-auto block text-red-600 bg-red-50';
+            }
+        }
+
+        // 提取图谱数据
+        function extractGraphDataFromResults(results, searchType) {
+            const nodes = [];
+            const edges = [];
+            const nodeIds = new Set();
+            const nodeFullData = new Map();
+
+            // 优化的节点样式配置 - 更现代美观的设计
+            const nodeConfig = {
+                "人物": {
+                    shape: "circularImage",
+                    color: {
+                        background: "#3b82f6",
+                        border: "#2563eb",
+                        highlight: "#60a5fa",
+                        hover: "#60a5fa"
+                    },
+                    image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4Zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10Z'/%3E%3C/svg%3E",
+                    size: 28,
+                    borderWidth: 2
+                },
+                "作品": {
+                    shape: "box",
+                    color: {
+                        background: "#22c55e",
+                        border: "#16a34a",
+                        highlight: "#86efac",
+                        hover: "#86efac"
+                    },
+                    size: 25,
+                    borderWidth: 2
+                },
+                "时间": {
+                    shape: "ellipse",
+                    color: {
+                        background: "#eab308",
+                        border: "#ca8a04",
+                        highlight: "#fde68a",
+                        hover: "#fde68a"
+                    },
+                    size: 25,
+                    borderWidth: 2
+                },
+                "地点": {
+                    shape: "diamond",
+                    color: {
+                        background: "#ef4444",
+                        border: "#dc2626",
+                        highlight: "#fecaca",
+                        hover: "#fecaca"
+                    },
+                    size: 25,
+                    borderWidth: 2
+                },
+                "情感": {
+                    shape: "triangle",
+                    color: {
+                        background: "#a855f7",
+                        border: "#9333ea",
+                        highlight: "#c4b5fd",
+                        hover: "#c4b5fd"
+                    },
+                    size: 25,
+                    borderWidth: 2
+                },
+                "意象": {
+                    shape: "star",
+                    color: {
+                        background: "#ec4899",
+                        border: "#db2777",
+                        highlight: "#fbcfe8",
+                        hover: "#fbcfe8"
+                    },
+                    size: 25,
+                    borderWidth: 2
+                },
+                "典故": {
+                    shape: "hexagon",
+                    color: {
+                        background: "#6366f1",
+                        border: "#4f46e5",
+                        highlight: "#c7d2fe",
+                        hover: "#c7d2fe"
+                    },
+                    size: 25,
+                    borderWidth: 2
+                },
+                "事件": {
+                    shape: "pentagon",
+                    color: {
+                        background: "#14b8a6",
+                        border: "#0d9488",
+                        highlight: "#a7f3d0",
+                        hover: "#a7f3d0"
+                    },
+                    size: 25,
+                    borderWidth: 2
+                },
+                "未知类型": {
+                    shape: "ellipse",
+                    color: {
+                        background: "#9ca3af",
+                        border: "#6b7280",
+                        highlight: "#d1d5db",
+                        hover: "#d1d5db"
+                    },
+                    size: 22,
+                    borderWidth: 1.5
+                }
+            };
+
+            results.forEach(item => {
+                // 主实体处理
+                const mainEntityType = item.entity_type;
+                const mainEntity = item.entity || {};
+
+                if (mainEntity.name) {
+                    const nodeId = `main_${mainEntity.id || mainEntity.name}`;
+                    if (!nodeIds.has(nodeId)) {
+                        nodeIds.add(nodeId);
+                        nodeFullData.set(nodeId, {
+                            entity: mainEntity,
+                            type: mainEntityType,
+                            relatedEntities: item.related_entities || []
+                        });
+
+                        // 节点数据
+                        const nodeConfigData = nodeConfig[mainEntityType] || nodeConfig["未知类型"];
+                        nodes.push({
+                            id: nodeId,
+                            label: mainEntity.name.length > 5 ? mainEntity.name.substring(0, 5) + '...' : mainEntity.name,
+                            group: mainEntityType,
+                            shape: nodeConfigData.shape,
+                            color: nodeConfigData.color,
+                            image: nodeConfigData.image,  // 已修复image属性
+                            font: {
+                                size: 12,
+                                color: '#fff',
+                                weight: 'bold',
+                                strokeColor: '#0002',
+                                strokeWidth: 1
+                            },
+                            size: nodeConfigData.size,
+                            borderWidth: nodeConfigData.borderWidth,
+                            shadow: {
+                                enabled: true,
+                                color: 'rgba(0,0,0,0.1)',
+                                size: 5,
+                                x: 0,
+                                y: 2
+                            },
+                            title: mainEntity.description || mainEntity.name,
+                            // 主节点突出显示
+                            scaling: {
+                                min: nodeConfigData.size,
+                                max: nodeConfigData.size + 8,
+                                label: {
+                                    enabled: true,
+                                    min: 12,
+                                    max: 14
+                                }
+                            }
+                        });
+                    }
+                }
+
+                // 关联实体处理
+                if (item.related_entities && item.related_entities.length > 0) {
+                    item.related_entities.forEach(rel => {
+                        const relatedEntity = rel.entity || {};
+                        const relatedType = relatedEntity.entity_type || "未知类型";
+
+                        if (relatedEntity.name) {
+                            const relatedNodeId = `rel_${relatedEntity.id || relatedEntity.name}`;
+                            if (!nodeIds.has(relatedNodeId)) {
+                                nodeIds.add(relatedNodeId);
+                                nodeFullData.set(relatedNodeId, {
+                                    entity: relatedEntity,
+                                    type: relatedType,
+                                    relatedEntities: []
+                                });
+
+                                const relatedNodeConfig = nodeConfig[relatedType] || nodeConfig["未知类型"];
+                                nodes.push({
+                                    id: relatedNodeId,
+                                    label: relatedEntity.name.length > 5 ? relatedEntity.name.substring(0, 5) + '...' : relatedEntity.name,
+                                    group: relatedType,
+                                    shape: relatedNodeConfig.shape,
+                                    color: relatedNodeConfig.color,
+                                    image: relatedNodeConfig.image,  // 已修复image属性
+                                    font: {
+                                        size: 11,
+                                        color: '#fff',
+                                        weight: 'bold',
+                                        strokeColor: '#0002',
+                                        strokeWidth: 1
+                                    },
+                                    size: relatedNodeConfig.size - 3,
+                                    borderWidth: relatedNodeConfig.borderWidth,
+                                    shadow: {
+                                        enabled: true,
+                                        color: 'rgba(0,0,0,0.08)',
+                                        size: 4,
+                                        x: 0,
+                                        y: 1
+                                    },
+                                    title: relatedEntity.description || relatedEntity.name
+                                });
+                            }
+
+                            // 边处理
+                            if (mainEntity.name) {
+                                const mainNodeId = `main_${mainEntity.id || mainEntity.name}`;
+                                // 根据关系类型设置不同颜色
+                                let edgeColor = '#94a3b8';
+                                if (rel.relationship?.type === '创作') edgeColor = '#60a5fa';
+                                else if (rel.relationship?.type === '包含') edgeColor = '#86efac';
+                                else if (rel.relationship?.type === '经历') edgeColor = '#fde68a';
+
+                                edges.push({
+                                    from: mainNodeId,
+                                    to: relatedNodeId,
+                                    label: rel.relationship?.description?.length > 4
+                                        ? rel.relationship.description.substring(0, 4)
+                                        : rel.relationship?.description || "关联",
+                                    color: {
+                                        color: edgeColor,
+                                        highlight: '#3b82f6',
+                                        hover: '#60a5fa'
+                                    },
+                                    font: {
+                                        size: 9,
+                                        color: '#475569',
+                                        strokeColor: '#ffffff80',
+                                        strokeWidth: 2
+                                    },
+                                    width: rel.relationship?.weight || 1.2,
+                                    hoverWidth: 2.5,
+                                    title: rel.relationship?.description || "相关联",
+                                    arrows: {
+                                        to: {
+                                            enabled: true,
+                                            scaleFactor: 0.6
+                                        }
+                                    },
+                                    smooth: {
+                                        type: 'cubicBezier',
+                                        roundness: 0.4
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            return {nodes, edges, nodeFullData};
+        }
+
+        // 切换图谱显示/隐藏
+        function toggleGraphDisplay() {
+            const isGraphHidden = dom.relationSection.classList.contains('hidden');
+
+            if (isGraphHidden) {
+                dom.relationSection.classList.remove('hidden');
+                dom.graphToggleBtn.innerHTML = '<i class="fa fa-sitemap"></i><span>隐藏知识图谱</span>';
+                dom.graphToggleBtn.classList.add('graph-btn-active');
+
+                if (frontEndGraphData && frontEndGraphData.nodes.length > 0) {
+                    renderKnowledgeGraph(frontEndGraphData);
+                    dom.graphEmpty.classList.add('hidden');
+                } else {
+                    dom.graphEmpty.classList.remove('hidden');
+                    if (network) network.destroy();
+                }
+            } else {
+                dom.relationSection.classList.add('hidden');
+                dom.graphToggleBtn.innerHTML = '<i class="fa fa-sitemap"></i><span>显示知识图谱</span>';
+                dom.graphToggleBtn.classList.remove('graph-btn-active');
+            }
+        }
+
+        // 渲染知识图谱
+        function renderKnowledgeGraph(graphData) {
+            if (network) network.destroy();
+
+            // 图谱数据量过大时简化渲染
+            const isLargeGraph = graphData.nodes.length > 50;
+            const nodes = new vis.DataSet(graphData.nodes);
+            const edges = new vis.DataSet(graphData.edges);
+
+            // 优化的布局和交互配置
+            const options = {
+                nodes: {
+                    // 节点基本配置
+                    borderWidth: 1,
+                    size: 20,
+                    // 交互效果
+                    hover: true,
+                    scaling: {
+                        min: 15,
+                        max: 35,
+                        label: {
+                            enabled: true,
+                            min: 10,
+                            max: 16,
+                            drawThreshold: 12,
+                            maxVisible: 30
+                        }
+                    },
+                    // 动画效果
+                    physics: true,
+                    chosen: {
+                        node: function (values, id, selected, hovering) {
+                            if (hovering) {
+                                values.shadow = {
+                                    enabled: true,
+                                    color: 'rgba(0,0,0,0.2)',
+                                    size: 8,
+                                    x: 0,
+                                    y: 3
+                                };
+                                values.borderWidth = 3;
+                            }
+                        }
+                    }
+                },
+                edges: {
+                    // 边的样式优化
+                    smooth: isLargeGraph ? false : {
+                        enabled: true,
+                        type: 'cubicBezier',
+                        roundness: 0.3,
+                        forceDirection: 'horizontal'
+                    },
+                    // 边的交互效果
+                    hoverWidth: 2.5,
+                    selectionWidth: 2,
+                    // 边的动画
+                    physics: true,
+                    arrows: {
+                        to: {
+                            enabled: true,
+                            scaleFactor: 0.7
+                        }
+                    }
+                },
+
+                physics: {
+                    forceAtlas2Based: {
+                        gravitationalConstant: isLargeGraph ? -550 : -400,
+                        centralGravity: 0.3,
+                        springLength: isLargeGraph ? 120 : 160,
+                        springConstant: 0.09,
+                        avoidOverlap: 0.5
+                    },
+                    maxVelocity: 60,
+                    solver: 'forceAtlas2Based',
+                    timestep: 0.35,
+                    stabilization: {
+                        iterations: isLargeGraph ? 120 : 300,
+                        updateInterval: 25,
+                        onlyDynamicEdges: false
+                    },
+                    adaptiveTimestep: true
+                },
+                // 交互体验优化
+                interaction: {
+                    dragNodes: true,
+                    dragView: true,
+                    zoomView: true,
+                    tooltipDelay: 200,
+                    hover: true,
+                    selectConnectedEdges: false,
+                    // 键盘导航
+                    keyboard: {
+                        enabled: true,
+                        speed: {x: 10, y: 10, zoom: 0.02},
+                        bindToWindow: true
+                    }
+                },
+                // 布局和动画
+                layout: {
+                    randomSeed: 42,
+                    improvedLayout: true
+                },
+                // 动画效果
+                animation: {
+                    duration: 1000,
+                    easingFunction: "easeOutQuart"
+                }
+            };
+
+            // 大型图谱优化
+            if (isLargeGraph) {
+                options.physics.stabilization.iterations = 80;
+                options.edges.smooth = false;
+                options.nodes.shadow = false;
+            }
+
+            network = new vis.Network(dom.relationGraph, {nodes, edges}, options);
+
+            // 稳定后自动调整视图
+            network.on('stabilizationIterationsDone', () => {
+                network.fit({
+                    padding: 50
+                });
+            });
+
+            // 节点点击事件
+            network.on('click', (params) => {
+                if (params.nodes.length > 0) {
+                    const nodeId = params.nodes[0];
+                    const nodeData = graphData.nodeFullData.get(nodeId);
+
+                    if (nodeData) {
+                        const displayData = {
+                            title: nodeData.entity.name || '未知实体',
+                            description: nodeData.entity.description || '无描述信息',
+                            details: getEntityDetails(nodeData.entity, nodeData.type),
+                            relatedEntities: nodeData.relatedEntities || []
+                        };
+
+                        showDetailModal(displayData, nodeData.type);
+                    }
+                }
+            });
+
+            // 添加节点悬停提示
+            network.on('hoverNode', function (params) {
+                const nodeData = graphData.nodeFullData.get(params.node);
+                if (nodeData) {
+
+                }
+            });
+        }
+
+
+        // 根据实体类型获取详情
+        function getEntityDetails(entity, type) {
+            switch (type) {
+                case '人物':
+                    return {
+                        生卒年: entity.person_birth || '未知',
+                        籍贯: entity.person_nativeplace || '未知',
+                        逝世地: entity.person_deathplace || '未知',
+                        性别: entity.person_gender || '未知',
+                        性格: entity.person_character || '无记录'
+                    };
+                case '作品':
+                    return {
+                        内容: entity.work_content || '无记录',
+                        创作时间: entity.work_time || '未知',
+                        词牌名: entity.work_brand || '无记录'
+                    };
+                case '时间':
+                    return {
+                        时代: entity.date_era || '未知'
+                    };
+                case '地点':
+                    return {
+                        古名: entity.place_ancientname || '无记录',
+                        今名: entity.place_nowname || '无记录'
+                    };
+                case '事件':
+                    return {
+                        时间: entity.event_time || '未知',
+                        地点: entity.event_place || '未知'
+                    };
+                case '情感':
+                    return {
+                        情感强度: entity.emotion_strength || '未标注'
+                    };
+                case '典故':
+                    return {
+                        出处: entity.diangu_source || '无记录'
+                    };
+                case '意象':
+                    return {
+                        含义: entity.yixiang_means || '无解释'
+                    };
+                default:
+                    return {};
+            }
+        }
+
+        // 绑定图谱控制按钮
+        function bindGraphControls() {
+            dom.graphZoomIn.addEventListener('click', () => network?.zoomIn(0.15));
+            dom.graphZoomOut.addEventListener('click', () => network?.zoomOut(0.15));
+            dom.graphReset.addEventListener('click', () => {
+                if (network) {
+                    network.resetZoom();
+                    network.fit();
+                }
+            });
+        }
+
+        // 显示详情模态框
+        function showDetailModal(entityData, entityType) {
+            dom.modalTitle.textContent = `${entityType}：${entityData.title}`;
+
+            // 构建详情内容
+            let detailsHtml = '';
+
+            // 添加基本信息
+            detailsHtml += `
+            <div class="text-gray-600">
+                <span class="font-medium text-gray-700">描述：</span>
+                <div class="mt-1 pl-1 text-gray-700 leading-relaxed">${entityData.description.replace(/\n/g, '<br>')}</div>
+            </div>
+        `;
+
+            // 添加类型特定详情
+            if (entityData.details) {
+                detailsHtml += '<div class="mt-4 pt-4 border-t border-gray-100">';
+                detailsHtml += '<h4 class="font-medium text-gray-700 mb-2">详细属性：</h4>';
+                detailsHtml += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-y-2">';
+
+                for (const [key, value] of Object.entries(entityData.details)) {
+                    detailsHtml += `
+                    <div class="text-gray-600">
+                        <span class="text-gray-500">${key}：</span>
+                        <span>${value}</span>
+                    </div>
+                `;
+                }
+
+                detailsHtml += '</div></div>';
+            }
+
+            // 添加关联实体信息
+            if (entityData.relatedEntities && entityData.relatedEntities.length > 0) {
+                detailsHtml += '<div class="mt-4 pt-4 border-t border-gray-100">';
+                detailsHtml += `<h4 class="font-medium text-gray-700 mb-2">关联实体（共${entityData.relatedEntities.length}个）：</h4>`;
+                detailsHtml += '<div class="flex flex-wrap gap-2">';
+
+                entityData.relatedEntities.forEach(rel => {
+                    detailsHtml += `
+                    <span class="px-2 py-1 bg-gray-100 rounded text-xs text-gray-700 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${getEntityColor(rel.entity_type)}"></span>
+                        ${rel.entity.name}
+                        ${rel.relationship?.description ? `<span class="text-gray-500">(${rel.relationship.description})</span>` : ''}
+                    </span>
+                `;
+                });
+
+                detailsHtml += '</div></div>';
+            }
+
+            dom.modalContentContainer.innerHTML = detailsHtml;
+
+            // 显示动画
+            dom.detailModal.classList.remove('hidden');
+            setTimeout(() => {
+                dom.detailModal.classList.remove('opacity-0');
+                dom.detailModal.querySelector('div').classList.remove('scale-95');
+            }, 10);
+        }
+
+        // 获取实体类型对应的颜色
+        function getEntityColor(type) {
+            const colorMap = {
+                "人物": "#3b82f6",
+                "作品": "#22c55e",
+                "时间": "#eab308",
+                "地点": "#ef4444",
+                "情感": "#a855f7",
+                "意象": "#ec4899",
+                "典故": "#6366f1",
+                "事件": "#14b8a6"
+            };
+            return colorMap[type] || "#9ca3af";
+        }
+
+        // 关闭详情模态框
+        function closeDetailModal() {
+            dom.detailModal.classList.add('opacity-0');
+            dom.detailModal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => dom.detailModal.classList.add('hidden'), 200);
+        }
+
+        // 检索类型中文映射
+        function getTypeName(type) {
+            const typeMap = {
+                'person': '人物',
+                'work': '作品',
+                'time': '时间',
+                'location': '地点',
+                'event': '事件',
+                'emotion': '情感',
+                'allusion': '典故',
+                'image': '意象'
+            };
+            return typeMap[type] || type;
+        }
+
+        // 获取Django CSRF Token
+        function getCSRFToken() {
+            return document.cookie.split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1] || '';
+        }
+    </script>
+{% endblock %}

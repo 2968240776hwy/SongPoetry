@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}{{ dialogue|default:"新建对话" }} - 宋词雅韵{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h3 class="mb-4">{% if dialogue %}编辑对话{% else %}添加对话{% endif %}</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">用户名</label>
+            <input type="text" name="username" class="form-control" value="{{ dialogue.username|default_if_none:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">问题</label>
+            <textarea name="question" class="form-control" rows="3" required>{{ dialogue.question|default_if_none:'' }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">回答</label>
+            <textarea name="answer" class="form-control" rows="4" required>{{ dialogue.answer|default_if_none:'' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-success">保存</button>
+        <a href="{% url 'manager:dialogue_list' %}" class="btn btn-secondary">取消</a>
+    </form>
+</div>
+{% endblock %}

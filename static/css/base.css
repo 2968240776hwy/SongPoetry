@@ -1,0 +1,171 @@
+/* static/css/base.css */
+/* 基础样式 */
+body {
+    background-color: #f5f1e6;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d2c8b0' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+    color: #3a3226;
+    font-family: "Noto Serif SC", "SimSun", serif;
+    min-height: 100vh;
+    padding-top: 80px; /* 适配导航栏高度 */
+    padding-bottom: 40px;
+}
+
+/* 导航栏核心样式（带动态效果） */
+.navbar-custom {
+    background-color: #8b7d6b;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    padding: 0.8rem 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    transition: box-shadow 0.3s ease; /* 导航栏整体阴影过渡 */
+}
+
+/* 导航栏品牌名动态效果 */
+.navbar-custom .navbar-brand {
+    color: #f5f1e6;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 0.2rem 0;
+    transition: all 0.3s ease; /* 综合过渡效果 */
+    display: flex;
+    align-items: center; /* 图标文字居中对齐 */
+}
+
+.navbar-custom .navbar-brand:hover {
+    color: #fff;
+    transform: scale(1.05); /* 悬停时轻微放大 */
+}
+
+/* 导航链接动态效果（复刻登录页） */
+.navbar-custom .nav-link {
+    color: #f5f1e6;
+    position: relative;
+    margin: 0 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-weight: 500;
+    transition: color 0.3s ease; /* 颜色过渡 */
+    display: flex;
+    align-items: center; /* 图标文字居中 */
+}
+
+/* 链接图标间距 */
+.navbar-custom .nav-link i {
+    margin-right: 6px; /* 图标与文字间距 */
+    transition: transform 0.3s ease; /* 图标旋转效果 */
+}
+
+/* 下划线动画（核心动态效果） */
+.navbar-custom .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: #d9c8a9;
+    transition: width 0.3s ease; /* 下划线展开动画 */
+}
+
+/* 悬停效果：颜色+下划线+图标旋转 */
+.navbar-custom .nav-link:hover {
+    color: #fff;
+}
+
+.navbar-custom .nav-link:hover::after {
+    width: 100%; /* 下划线从0到100% */
+}
+
+.navbar-custom .nav-link:hover i {
+    transform: rotate(10deg); /* 图标轻微旋转 */
+}
+
+/* 激活状态样式（保留并增强） */
+.navbar-custom .nav-link.active {
+    color: #fff;
+    font-weight: 600;
+}
+
+.navbar-custom .nav-link.active::after {
+    width: 100%; /* 激活项下划线全宽 */
+}
+
+/* 固定宽度容器（确保各页面导航栏宽度一致） */
+.navbar-custom .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* 在base.html中加强导航栏样式优先级 */
+.navbar-custom.fixed-top {
+    z-index: 1050 !important; /* 确保导航栏在最上层 */
+    position: fixed !important;
+    top: 0 !important;
+    width: 100% !important;
+}
+
+/* 页脚样式（保持一致） */
+footer {
+    background-color: #8b7d6b;
+    color: #f5f1e6;
+    padding: 30px 0;
+    margin-top: 60px;
+}
+
+.footer-content {
+    text-align: center;
+}
+
+/* 页脚链接样式 */
+.footer-links {
+    margin: 1.5rem 0; /* 与上下元素保持间距 */
+    display: flex;
+    justify-content: center; /* 水平居中 */
+    gap: 2rem; /* 链接之间的间距 */
+    flex-wrap: wrap; /* 小屏幕自动换行 */
+}
+
+.footer-links a {
+    color: #f5f1e6; /* 保持与页脚文字相同颜色 */
+    text-decoration: none; /* 去除默认下划线 */
+    padding: 0.3rem 0.5rem; /* 增加点击区域 */
+    position: relative; /* 为下划线动画做准备 */
+    transition: color 0.3s ease; /* 颜色过渡效果 */
+}
+
+/* 下划线动画（与导航栏风格统一） */
+.footer-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background-color: #d9c8a9; /* 浅色调下划线，与导航栏呼应 */
+    transition: width 0.3s ease; /* 下划线展开动画 */
+}
+
+/* 悬停效果 */
+.footer-links a:hover {
+    color: #ffffff; /* 加深颜色 */
+}
+
+.footer-links a:hover::after {
+    width: 100%; /* 下划线展开 */
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .navbar-custom .nav-link {
+        margin: 0.25rem 0;
+        padding: 0.5rem 1rem;
+    }
+
+    body {
+        padding-top: 70px;
+    }
+}

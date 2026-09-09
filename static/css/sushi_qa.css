@@ -1,0 +1,460 @@
+/* static/css/sushi_qa.css */
+
+/* 智能问答页面专属样式 */
+.qa-footer-hide {
+    display: none !important;
+}
+
+.qa-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f5f1e6;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d2c8b0' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+    overflow: hidden;
+    color: #3a3226;
+    font-family: "Noto Serif SC", "SimSun", serif;
+}
+
+.main-container {
+    flex: 1;
+    padding: 20px 0;
+    overflow: hidden;
+}
+
+.qa-container {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    height: calc(100vh - 120px);
+    display: flex;
+    overflow: hidden;
+}
+
+.history-sidebar {
+    width: 300px;
+    background-color: #f9f6f0;
+    border-right: 1px solid #e6dfd0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.history-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid #e6dfd0;
+    background-color: #f0e9dd;
+    flex-shrink: 0;
+}
+
+.history-title {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #5d4b36;
+    font-weight: 600;
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: #d9c8a9 #f9f6f0;
+}
+
+.history-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.history-list::-webkit-scrollbar-track {
+    background: #f9f6f0;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+    background-color: #d9c8a9;
+    border-radius: 3px;
+}
+
+.history-item {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e6dfd0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.history-item:hover {
+    background-color: #f0e9dd;
+    padding-left: 22px;
+}
+
+.history-item.active {
+    background-color: #e6dfd0;
+    border-left: 3px solid #8b7d6b;
+}
+
+.history-question {
+    font-size: 0.95rem;
+    color: #5d4b36;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.history-time {
+    font-size: 0.8rem;
+    color: #9b8c75;
+    margin-top: 6px;
+}
+
+/* 暂无会话/未登录提示样式 */
+.history-empty {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.history-empty div {
+    width: 100%;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9b8c75;
+    font-size: 0.9rem;
+}
+
+.chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    background-color: #fff;
+}
+
+.chat-content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+    background-color: #fcfbfa;
+    scrollbar-width: thin;
+    scrollbar-color: #d9c8a9 #fcfbfa;
+}
+
+.chat-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-content::-webkit-scrollbar-track {
+    background: #fcfbfa;
+}
+
+.chat-content::-webkit-scrollbar-thumb {
+    background-color: #d9c8a9;
+    border-radius: 3px;
+}
+
+.system-prompt {
+    background-color: #f0e9dd;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+    color: #5d4b36;
+    border-left: 3px solid #8b7d6b;
+}
+
+.message {
+    margin-bottom: 20px;
+    max-width: 80%;
+    width: 100%;
+    display: flex;
+}
+
+.user-message {
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+.avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.message-wrapper {
+    display: flex;
+    align-items: flex-start;
+}
+
+.message-content {
+    padding: 12px 18px;
+    border-radius: 12px;
+    line-height: 1.7;
+    font-size: 1rem;
+    word-break: break-word;
+}
+
+/* Markdown格式样式 */
+.message-content h1,
+.message-content h2,
+.message-content h3,
+.message-content h4 {
+    margin: 1.2rem 0 0.6rem;
+    font-weight: 600;
+    color: inherit;
+    line-height: 1.5;
+}
+
+.message-content h1 {
+    font-size: 1.5rem;
+    border-bottom: 1px solid #e6dfd0;
+    padding-bottom: 0.3rem;
+}
+
+.message-content h2 {
+    font-size: 1.3rem;
+    border-bottom: 1px solid #f0e9dd;
+    padding-bottom: 0.2rem;
+}
+
+.message-content h3 {
+    font-size: 1.1rem;
+}
+
+.message-content p {
+    margin: 0.6rem 0;
+}
+
+.message-content ul,
+.message-content ol {
+    margin: 0.6rem 0 0.6rem 1.8rem;
+    padding-left: 0;
+}
+
+.message-content ul li {
+    list-style: disc;
+    margin: 0.4rem 0;
+}
+
+.message-content ol li {
+    list-style: decimal;
+    margin: 0.4rem 0;
+}
+
+.message-content blockquote {
+    border-left: 3px solid #8b7d6b;
+    padding: 0.6rem 1rem;
+    margin: 0.8rem 0;
+    background-color: rgba(139, 125, 107, 0.08);
+    border-radius: 0 4px 4px 0;
+}
+
+.message-content pre {
+    background-color: #f5f5f5;
+    padding: 1rem;
+    border-radius: 6px;
+    margin: 0.8rem 0;
+    overflow-x: auto;
+}
+
+.message-content code {
+    background-color: #f5f5f5;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: "Consolas", "Monaco", monospace;
+    font-size: 0.9rem;
+    color: #d32f2f;
+}
+
+.message-content pre code {
+    padding: 0;
+    background-color: transparent;
+    color: inherit;
+}
+
+.message-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.8rem 0;
+}
+
+.message-content th,
+.message-content td {
+    border: 1px solid #e6dfd0;
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+}
+
+.message-content th {
+    background-color: #f0e9dd;
+    font-weight: 600;
+}
+
+.loading-indicator {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.loading-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #5d4b36;
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.loading-dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.loading-dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+    0%, 80%, 100% {
+        transform: scale(0);
+    }
+    40% {
+        transform: scale(1);
+    }
+}
+
+/* 用户消息样式 */
+.user-message .message-content {
+    background-color: #8b7d6b;
+    color: #f5f1e6;
+    border-radius: 12px 12px 4px 12px;
+    margin: 0;
+    padding: 12px 18px;
+}
+
+.assistant-message .message-content {
+    background-color: #f0e9dd;
+    color: #3a3226;
+    border-bottom-left-radius: 4px;
+}
+
+.input-area {
+    padding: 15px 20px;
+    border-top: 1px solid #e6dfd0;
+    background-color: #f9f6f0;
+    flex-shrink: 0;
+}
+
+.input-form {
+    display: flex;
+    gap: 12px;
+    max-width: 100%;
+}
+
+.question-input {
+    flex: 1;
+    padding: 14px 20px;
+    border: 1px solid #e6dfd0;
+    border-radius: 25px;
+    resize: none;
+    height: 52px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.question-input:focus {
+    outline: none;
+    border-color: #8b7d6b;
+    box-shadow: 0 0 0 3px rgba(139, 125, 107, 0.1);
+}
+
+.send-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background-color: #8b7d6b;
+    color: #f5f1e6;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.send-btn:disabled {
+    background-color: #b8aca0;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.send-btn:hover:not(:disabled) {
+    background-color: #6b5c47;
+    transform: translateY(-2px);
+}
+
+.send-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* 响应式样式 */
+@media (max-width: 992px) {
+    .history-sidebar {
+        width: 260px;
+    }
+
+    .chat-content {
+        padding: 20px 15px;
+    }
+
+    .message {
+        max-width: 85%;
+    }
+}
+
+@media (max-width: 768px) {
+    .qa-container {
+        flex-direction: column;
+        height: calc(100vh - 60px);
+    }
+
+    .history-sidebar {
+        width: 100%;
+        height: 35%;
+        border-right: none;
+        border-bottom: 1px solid #e6dfd0;
+    }
+
+    .chat-content {
+        padding: 15px 10px;
+    }
+
+    .message {
+        max-width: 85%;
+    }
+
+    .input-area {
+        padding: 12px 15px;
+    }
+
+    .question-input {
+        padding: 12px 18px;
+        height: 48px;
+    }
+
+    .send-btn {
+        width: 48px;
+        height: 48px;
+    }
+}

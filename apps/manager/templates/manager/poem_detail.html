@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}词作详情 - 宋词雅韵{% endblock %}
+{% block content %}
+<div class="container mt-5" style="max-width: 800px;">
+    <h3 class="mb-3">ID：{{ poem.value }}</h3>
+    <p class="text-muted mb-1">词牌名：{{ poem.rhythmic }}</p>
+    <p class="text-muted">作者：{{ poem.author }}</p>
+    <hr>
+    <p style="white-space: pre-line;">{{ poem.content }}</p>
+    <hr>
+    <a href="{% url 'manager:poem_list' %}" class="btn btn-outline-secondary">返回列表</a>
+</div>
+{% endblock %}

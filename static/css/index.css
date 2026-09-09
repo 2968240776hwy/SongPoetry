@@ -1,0 +1,202 @@
+/* static/css/index.css */
+/* 好词好句轮播区 */
+.carousel-container {
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    margin-bottom: 40px;
+    margin-top: 20px;
+}
+
+.carousel-title {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 1.8rem;
+    color: #5d4b36;
+    position: relative;
+    padding-bottom: 15px;
+}
+
+.carousel-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 2px;
+    background-color: #8b7d6b;
+}
+
+.poem-card {
+    background-color: rgba(255, 255, 255, 0.6);
+    border-radius: 6px;
+    padding: 25px;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease;
+}
+
+.poem-card:hover {
+    transform: translateY(-5px);
+}
+
+.poem-title {
+    font-size: 1.5rem;
+    color: #5d4b36;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.poem-content {
+    font-size: 1.1rem;
+    line-height: 2;
+    text-align: center;
+    white-space: pre-line;
+}
+
+.carousel-control-prev, .carousel-control-next {
+    width: 5%;
+}
+
+.carousel-control-prev-icon, .carousel-control-next-icon {
+    background-color: #8b7d6b;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 功能模块区 */
+.modules-section {
+    margin-top: 50px;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 1.8rem;
+    color: #5d4b36;
+    margin-bottom: 40px;
+    position: relative;
+    padding-bottom: 15px;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 2px;
+    background-color: #8b7d6b;
+}
+
+.module-card {
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    height: 100%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.module-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.module-icon {
+    font-size: 3rem;
+    color: #8b7d6b;
+    margin-bottom: 20px;
+}
+
+.module-title {
+    font-size: 1.4rem;
+    color: #5d4b36;
+    margin-bottom: 15px;
+}
+
+.module-desc {
+    font-size: 1rem;
+    color: #6b5c47;
+    margin-bottom: 25px;
+    flex-grow: 1;
+}
+
+.module-btn {
+    background-color: #8b7d6b;
+    color: #f5f1e6;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    align-self: center;
+}
+
+.module-btn:hover {
+    background-color: #6b5c47;
+    color: #fff;
+}
+
+/* 词人展示区 */
+.poets-section {
+    margin-top: 60px;
+}
+
+.poet-card a {
+    text-decoration: none;
+}
+
+.poet-card a:hover .poet-name {
+    text-decoration: none;
+}
+
+.poet-card {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.poet-img {
+    width: 120px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin: 0 auto 15px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.poet-img:hover {
+    transform: scale(1.05);
+}
+
+.poet-name {
+    font-size: 1.1rem;
+    color: #5d4b36;
+    margin: 0;
+}
+
+/* 响应式调整（仅内容） */
+@media (max-width: 768px) {
+    .poem-card {
+        min-height: 250px;
+        padding: 15px;
+    }
+
+    .module-card {
+        margin-bottom: 30px;
+    }
+}
