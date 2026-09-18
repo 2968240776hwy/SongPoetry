@@ -81,9 +81,9 @@ DATABASES = {
         # 数据库引擎：MySQL
         'ENGINE': 'django.db.backends.mysql',
         # 数据库名称
-        'NAME': 'songci_db',
+        'NAME': '',
         # 数据库用户名
-        'USER': 'root',
+        'USER': '',
         # 数据库密码
         'PASSWORD': '',
         # 数据库主机地址（本地为localhost或127.0.0.1）
@@ -141,9 +141,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 NEO4J_CONFIG = {
     'default': {
         'URI': 'bolt://localhost',
-        'USERNAME': 'neo4j',
+        'USERNAME': '',
         'PASSWORD': '',
-        'DATABASE': 'neo4j',
+        'DATABASE': '',
         'BATCH_SIZE': 1000,
         'CONSTRAINTS': [
             "create constraint chunk_id if not exists for (c:__Chunk__) require c.id is unique",
