@@ -85,7 +85,7 @@ DATABASES = {
         # 数据库用户名
         'USER': 'root',
         # 数据库密码
-        'PASSWORD': 'root',
+        'PASSWORD': '',
         # 数据库主机地址（本地为localhost或127.0.0.1）
         'HOST': 'localhost',
         # 数据库端口（MySQL默认3306）
@@ -142,7 +142,7 @@ NEO4J_CONFIG = {
     'default': {
         'URI': 'bolt://localhost',
         'USERNAME': 'neo4j',
-        'PASSWORD': '123456789',
+        'PASSWORD': '',
         'DATABASE': 'neo4j',
         'BATCH_SIZE': 1000,
         'CONSTRAINTS': [
@@ -178,7 +178,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # 问答模块配置
 LLM_CONFIG = {
     'default': {
-        'API_KEY': "sk-5e58c7372c784d64b2c805209799571f",
+        'API_KEY': "",
         'API_BASE': 'https://dashscope.aliyuncs.com/compatible-mode/v1',
         'API_TYPE': 'OpenAI',
 
